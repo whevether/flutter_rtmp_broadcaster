@@ -1,0 +1,32 @@
+name: rtmp_broadcaster
+description: An extension of the Flutter camera plugin that enables live video streaming over RTMP on Android and iOS devices.
+version: 2.3.4
+homepage: https://github.com/emiliodallatorre/flutter_rtmp_broadcaster
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  path_provider: ^2.1.5
+  video_player: ^2.9.5
+
+  flutter_test:
+    sdk: flutter
+
+  flutter_driver:
+    sdk: flutter
+
+# The following section is specific to Flutter.
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.app.rtmp_publisher
+        pluginClass: RtmppublisherPlugin
+      ios:
+        pluginClass: RtmppublisherPlugin
