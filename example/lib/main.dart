@@ -10,7 +10,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rtmp_broadcaster/camera.dart';
-import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CameraExampleHome extends StatefulWidget {
@@ -40,7 +39,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   String? imagePath;
   String? videoPath;
   String? url;
-  VideoPlayerController? videoController;
   VoidCallback? videoPlayerListener;
   bool enableAudio = true;
   bool useOpenGL = true;
@@ -195,17 +193,10 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            videoController == null && imagePath == null
+            imagePath == null
                 ? Container()
                 : SizedBox(
-                    child: (videoController == null)
-                        ? Image.file(File(imagePath!))
-                        : Container(
-                            child: Center(
-                              child: AspectRatio(aspectRatio: videoController!.value.aspectRatio, child: VideoPlayer(videoController!)),
-                            ),
-                            decoration: BoxDecoration(border: Border.all(color: Colors.pink)),
-                          ),
+                    child:Image.file(File(imagePath!)),   
                     width: 64.0,
                     height: 64.0,
                   ),
@@ -339,8 +330,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
       if (mounted) {
         setState(() {
           imagePath = filePath;
-          videoController?.dispose();
-          videoController = null;
         });
         showInSnackBar('Picture saved to $filePath');
       }
@@ -460,8 +449,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
       _showCameraException(e);
       return null;
     }
-
-    await _startVideoPlayer();
   }
 
   Future<void> pauseVideoRecording() async {
@@ -625,27 +612,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
     }
   }
 
-  Future<void> _startVideoPlayer() async {
-    final VideoPlayerController vcontroller = VideoPlayerController.file(File(videoPath!));
-    videoPlayerListener = () {
-      if (videoController != null) {
-        // Refreshing the state to update video player with the correct ratio.
-        if (mounted) setState(() {});
-        videoController!.removeListener(videoPlayerListener ?? () {});
-      }
-    };
-    vcontroller.addListener(videoPlayerListener ?? () {});
-    await vcontroller.setLooping(true);
-    await vcontroller.initialize();
-    await videoController?.dispose();
-    if (mounted) {
-      setState(() {
-        imagePath = null;
-        videoController = vcontroller;
-      });
-    }
-    await vcontroller.play();
-  }
 
   Future<String?> takePicture() async {
     if (!isControllerInitialized) {

@@ -17,7 +17,6 @@ let package = Package(
     dependencies: [
         .package(name: "package_info_plus", path: "/Users/user/.pub-cache/hosted/pub.dev/package_info_plus-8.3.0/ios/package_info_plus"),
         .package(name: "path_provider_foundation", path: "/Users/user/.pub-cache/hosted/pub.dev/path_provider_foundation-2.4.1/darwin/path_provider_foundation"),
-        .package(name: "video_player_avfoundation", path: "/Users/user/.pub-cache/hosted/pub.dev/video_player_avfoundation-2.7.1/darwin/video_player_avfoundation"),
         .package(name: "wakelock_plus", path: "/Users/user/.pub-cache/hosted/pub.dev/wakelock_plus-1.3.2/ios/wakelock_plus")
     ],
     targets: [
@@ -26,7 +25,6 @@ let package = Package(
             dependencies: [
                 .product(name: "package-info-plus", package: "package_info_plus"),
                 .product(name: "path-provider-foundation", package: "path_provider_foundation"),
-                .product(name: "video-player-avfoundation", package: "video_player_avfoundation"),
                 .product(name: "wakelock-plus", package: "wakelock_plus")
             ]
         )

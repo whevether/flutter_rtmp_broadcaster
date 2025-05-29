@@ -13,7 +13,6 @@ dependencies:
 
 dev_dependencies:
   path_provider: ^2.1.5
-  video_player: ^2.9.5
 
   flutter_test:
     sdk: flutter
