@@ -33,8 +33,8 @@ Using this plugin is as easy as using the original [camera plugin](https://pub.d
 |----------|-------------|
 | `startVideoStreaming(String url, {int bitrate = 1200 * 1024, bool? androidUseOpenGL})` | Initiates video streaming to an RTMP endpoint. |
 | `startVideoRecordingAndStreaming(String filePath, String url, {int bitrate = 1200 * 1024, bool? androidUseOpenGL})` | Initiates video streaming to an RTMP endpoint while simultaneously saving a high-quality version to a local file. |
-| `pauseVideoStreaming()` | Pauses an ongoing video stream. |
-| `resumeVideoStreaming()` | Resumes a paused video stream. |
+| `pauseVideoStreaming()` | Pauses an ongoing video stream. Android is not implemented. Because the Android library does not have a pause method, Android needs to stop streaming before restarting it|
+| `resumeVideoStreaming()` | Resumes a paused video stream. Android is not implemented. Because the Android library does not have a pause method, Android needs to stop streaming before restarting it|
 | `stopEverything()` | Halts ongoing video streaming and recording processes. |
 | ... | ... |
 
@@ -87,11 +87,11 @@ These adjustments will ensure compatibility and address packaging concerns for y
 
 ## Example
 
-For an illustrative implementation of this plugin, you can explore the [example code](https://github.com/emiliodallatorre/flutter_rtmp_broadcaster/tree/master/example). This provides a practical showcase of utilizing the `rtmp_publisher` plugin to facilitate real-time video streaming to MUX. Additionally, the example demonstrates snapshot capturing and video recording. To explore further, clone the repository and execute the app on either an Android or iOS device.
+For an illustrative implementation of this plugin, you can explore the [example code](https://github.com/whevether/flutter_rtmp_broadcastertree/master/example). This provides a practical showcase of utilizing the `rtmp_publisher` plugin to facilitate real-time video streaming to MUX. Additionally, the example demonstrates snapshot capturing and video recording. To explore further, clone the repository and execute the app on either an Android or iOS device.
 
 ## Troubleshooting & issues
 
-If you encounter any issues while using this plugin, don't hesitate to seek assistance. To report problems or unexpected behavior, please open an issue on the [GitHub repository](https://github.com/emiliodallatorre/flutter_rtmp_broadcaster). I will do my best to address the issues and provide solutions. However, please understand that my availability for addressing issues is limited due to time constraints.
+If you encounter any issues while using this plugin, don't hesitate to seek assistance. To report problems or unexpected behavior, please open an issue on the [GitHub repository](https://github.com/whevether/flutter_rtmp_broadcaster). I will do my best to address the issues and provide solutions. However, please understand that my availability for addressing issues is limited due to time constraints.
 
 For those in need of expedited and prioritized support, I offer paid fast support services. If you require immediate assistance, personalized guidance, or customized solutions, feel free to reach out to me at [info@emiliodallatorre.it](mailto:info@emiliodallatorre.it) to discuss potential support options.
 

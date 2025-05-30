@@ -256,13 +256,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
-  rtmp_broadcaster:
+  rtmp_streaming:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "2.3.4"
+    version: "0.0.1"
   sky_engine:
     dependency: transitive
     description: flutter

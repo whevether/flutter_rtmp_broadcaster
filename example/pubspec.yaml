@@ -1,5 +1,5 @@
-name: rtmp_broadcaster_example
-description: Demonstrates how to use the rtmp_broadcaster plugin.
+name: rtmp_streaming_example
+description: Demonstrates how to use the rtmp_streaming plugin.
 
 publish_to: 'none'
 
@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  rtmp_broadcaster:
+  rtmp_streaming:
     path: ../
 
   path_provider: ^2.1.5

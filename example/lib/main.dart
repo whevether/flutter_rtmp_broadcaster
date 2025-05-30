@@ -9,7 +9,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:rtmp_broadcaster/camera.dart';
+import 'package:rtmp_streaming/camera.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CameraExampleHome extends StatefulWidget {
@@ -112,6 +112,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
       body: Column(
         children: <Widget>[
           Expanded(
+            flex: 1,
             child: Container(
               child: Padding(
                 padding: const EdgeInsets.all(1.0),
