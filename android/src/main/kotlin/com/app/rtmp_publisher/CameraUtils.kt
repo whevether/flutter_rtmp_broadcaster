@@ -1,6 +1,5 @@
 package com.app.rtmp_publisher
 
-
 import android.app.Activity
 import android.content.Context
 import android.graphics.ImageFormat
@@ -13,9 +12,8 @@ import android.media.CamcorderProfile
 import android.os.Build
 import android.util.Size
 import androidx.annotation.RequiresApi
-import com.app.rtmp_publisher.Camera.ResolutionPreset
+import com.app.rtmp_publisher.CameraPermissions.ResolutionPreset
 import java.util.*
-
 
 /** Provides various utilities for camera.  */
 object CameraUtils {
@@ -33,8 +31,8 @@ object CameraUtils {
     fun computeBestCaptureSize(streamConfigurationMap: StreamConfigurationMap): Size {
         // For still image captures, we use the largest available size.
         return Collections.max(
-                Arrays.asList(*streamConfigurationMap.getOutputSizes(ImageFormat.JPEG)),
-                CompareSizesByArea())
+            Arrays.asList(*streamConfigurationMap.getOutputSizes(ImageFormat.JPEG)),
+            CompareSizesByArea())
     }
 
     @Throws(CameraAccessException::class)
@@ -61,7 +59,7 @@ object CameraUtils {
     }
 
     fun getBestAvailableCamcorderProfileForResolutionPreset(
-            cameraName: String, preset: ResolutionPreset?): CamcorderProfile {
+        cameraName: String, preset: ResolutionPreset?): CamcorderProfile {
         val cameraId = cameraName.toInt()
         return when (preset) {
             ResolutionPreset.max -> {
@@ -87,7 +85,7 @@ object CameraUtils {
                     CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
                 } else {
                     throw IllegalArgumentException(
-                            "No capture session available for current capture session.")
+                        "No capture session available for current capture session.")
                 }
             }
             ResolutionPreset.ultraHigh -> {
@@ -110,7 +108,7 @@ object CameraUtils {
                     CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
                 } else {
                     throw IllegalArgumentException(
-                            "No capture session available for current capture session.")
+                        "No capture session available for current capture session.")
                 }
             }
             ResolutionPreset.veryHigh -> {
@@ -130,7 +128,7 @@ object CameraUtils {
                     CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
                 } else {
                     throw IllegalArgumentException(
-                            "No capture session available for current capture session.")
+                        "No capture session available for current capture session.")
                 }
             }
             ResolutionPreset.high -> {
@@ -147,7 +145,7 @@ object CameraUtils {
                     CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
                 } else {
                     throw IllegalArgumentException(
-                            "No capture session available for current capture session.")
+                        "No capture session available for current capture session.")
                 }
             }
             ResolutionPreset.medium -> {
@@ -161,7 +159,7 @@ object CameraUtils {
                     CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
                 } else {
                     throw IllegalArgumentException(
-                            "No capture session available for current capture session.")
+                        "No capture session available for current capture session.")
                 }
             }
             ResolutionPreset.low -> {
@@ -172,14 +170,14 @@ object CameraUtils {
                     CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
                 } else {
                     throw IllegalArgumentException(
-                            "No capture session available for current capture session.")
+                        "No capture session available for current capture session.")
                 }
             }
             else -> if (CamcorderProfile.hasProfile(cameraId, CamcorderProfile.QUALITY_LOW)) {
                 CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
             } else {
                 throw IllegalArgumentException(
-                        "No capture session available for current capture session.")
+                    "No capture session available for current capture session.")
             }
         }
     }
@@ -188,7 +186,7 @@ object CameraUtils {
         override fun compare(lhs: Size, rhs: Size): Int {
             // We cast here to ensure the multiplications won't overflow.
             return java.lang.Long.signum(
-                    lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
+                lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
         }
     }
 }

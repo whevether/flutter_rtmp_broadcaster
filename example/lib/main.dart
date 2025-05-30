@@ -42,7 +42,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   VoidCallback? videoPlayerListener;
   bool enableAudio = true;
   bool useOpenGL = true;
-  TextEditingController _textFieldController = TextEditingController(text: "rtmp://192.168.1.16/live/111");
+  TextEditingController _textFieldController = TextEditingController(text: "rtmp://192.168.1.18/live/111");
 
   bool get isStreaming => controller?.value.isStreamingVideoRtmp ?? false;
   bool isVisible = true;
@@ -222,7 +222,11 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
         IconButton(
           icon: const Icon(Icons.videocam),
           color: Colors.blue,
-          onPressed: controller != null && isControllerInitialized && !isRecordingVideo ? onVideoRecordButtonPressed : null,
+          onPressed: (){
+            if(controller != null && isControllerInitialized && !isRecordingVideo) {
+              onVideoRecordButtonPressed();
+            }
+          },
         ),
         IconButton(
           icon: const Icon(Icons.watch),

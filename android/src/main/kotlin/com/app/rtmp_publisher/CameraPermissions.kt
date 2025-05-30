@@ -1,69 +1,71 @@
 package com.app.rtmp_publisher
 
-import android.Manifest.permission
 import android.app.Activity
+import androidx.core.app.ActivityCompat
+import android.Manifest.permission
+import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener
 import android.content.pm.PackageManager
 import androidx.annotation.VisibleForTesting
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener
-import kotlin.reflect.KFunction1
+
+interface ResultCallback {
+    fun onResult(errorCode: String?, errorDescription: String?)
+}
 
 class CameraPermissions {
-
-    interface ResultCallback {
-        fun onResult(errorCode: String?, errorDescription: String?)
+    // Mirrors camera.dart
+    enum class ResolutionPreset {
+        low, medium, high, veryHigh, ultraHigh, max
     }
-
     private var ongoing = false
     fun requestPermissions(
-            activity: Activity,
-            permissionsRegistry: PermissionStuff,
-            enableAudio: Boolean,
-            callback: ResultCallback) {
+        activity: Activity,
+        permissionsRegistry: PermissionStuff,
+        enableAudio: Boolean,
+        callback: ResultCallback) {
         if (ongoing) {
             callback.onResult("cameraPermission", "Camera permission request ongoing")
         }
         if (!hasCameraPermission(activity) || enableAudio && !hasAudioPermission(activity) || !hasWriteExternalStoragePermission(activity) || !hasWakeLockPermission(activity)) {
             permissionsRegistry.adddListener(
-                    CameraRequestPermissionsListener(
-                            object : ResultCallback {
-                                override fun onResult(errorCode: String?, errorDescription: String?) {
-                                    ongoing = false
-                                    callback.onResult(errorCode, errorDescription)
-                                }
-                            }))
+                CameraRequestPermissionsListener(
+                    object : ResultCallback {
+                        override fun onResult(errorCode: String?, errorDescription: String?) {
+                            ongoing = false
+                            callback.onResult(errorCode, errorDescription)
+                        }
+                    }))
             ongoing = true
             ActivityCompat.requestPermissions(
-                    activity,
-                    if (enableAudio) arrayOf(permission.CAMERA, permission.RECORD_AUDIO, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK) else arrayOf(permission.CAMERA, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK),
-                    CAMERA_REQUEST_ID)
+                activity,
+                if (enableAudio) arrayOf(permission.CAMERA, permission.RECORD_AUDIO, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK) else arrayOf(permission.CAMERA, permission.WRITE_EXTERNAL_STORAGE, permission.WAKE_LOCK),
+                CAMERA_REQUEST_ID)
         } else {
             // Permissions already exist. Call the callback with success.
             callback.onResult(null, null)
         }
     }
-
+    //检查相机权限
     private fun hasCameraPermission(activity: Activity): Boolean {
         return (ContextCompat.checkSelfPermission(activity, permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED)
     }
-
+    //检查音频权限
     private fun hasAudioPermission(activity: Activity): Boolean {
         return (ContextCompat.checkSelfPermission(activity, permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED)
     }
-
+    //检查存储写入权限
     private fun hasWriteExternalStoragePermission(activity: Activity): Boolean {
         return (ContextCompat.checkSelfPermission(activity, permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED)
     }
-
+    //检查屏幕唤醒权限
     private fun hasWakeLockPermission(activity: Activity): Boolean {
         return (ContextCompat.checkSelfPermission(activity, permission.WAKE_LOCK)
                 == PackageManager.PERMISSION_GRANTED)
     }
-
+    //权限请求监听事件
     @VisibleForTesting
     internal class CameraRequestPermissionsListener @VisibleForTesting constructor(val callback: ResultCallback) : RequestPermissionsResultListener {
         // There's no way to unregister permission listeners in the v1 embedding, so we'll be called
@@ -87,7 +89,6 @@ class CameraPermissions {
         }
 
     }
-
     companion object {
         private const val CAMERA_REQUEST_ID = 9796
     }

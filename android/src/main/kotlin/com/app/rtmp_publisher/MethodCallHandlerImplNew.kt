@@ -2,20 +2,20 @@ package com.app.rtmp_publisher
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.Point
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CameraMetadata
 import android.os.Build
 import android.os.Handler
+import android.os.HandlerThread
 import android.util.Log
 import android.view.OrientationEventListener
 import androidx.annotation.RequiresApi
-import com.app.rtmp_publisher.CameraPermissions.ResultCallback
+import com.app.rtmp_publisher.CameraPermissions.ResolutionPreset
 import io.flutter.plugin.common.*
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.platform.PlatformViewRegistry
 import java.util.HashMap
 
 class MethodCallHandlerImplNew(
@@ -23,7 +23,7 @@ class MethodCallHandlerImplNew(
     private val messenger: BinaryMessenger,
     private val cameraPermissions: CameraPermissions,
     private val permissionsRegistry: PermissionStuff,
-    private val flutterEngine: FlutterEngine
+    private val platformViewRegistry: PlatformViewRegistry
 ) : MethodCallHandler {
 
     private val methodChannel: MethodChannel
@@ -31,21 +31,24 @@ class MethodCallHandlerImplNew(
     private var currentOrientation = OrientationEventListener.ORIENTATION_UNKNOWN
     private var dartMessenger: DartMessenger? = null
     private var nativeViewFactory: NativeViewFactory? = null
-    private val handler = Handler()
+    private var handler: Handler? = null
+    private val VIEW_TYPE: String = "hybrid-view-type"
 
     private val textureId = 0L
 
     init {
-        Log.d("TAG", "init $flutterEngine")
+        val handlerThread = HandlerThread("WorkerThread").apply {
+            start()
+        }
+        handler = Handler(handlerThread.looper)
+        Log.d("TAG", "init $platformViewRegistry")
         methodChannel = MethodChannel(messenger, "plugins.flutter.io/rtmp_publisher")
         imageStreamChannel = EventChannel(messenger, "plugins.flutter.io/rtmp_publisher/imageStream")
         methodChannel.setMethodCallHandler(this)
         nativeViewFactory = NativeViewFactory(activity)
 
-        flutterEngine
-            .platformViewsController
-            .registry
-            .registerViewFactory("hybrid-view-type", nativeViewFactory as NativeViewFactory)
+        platformViewRegistry
+            .registerViewFactory(VIEW_TYPE, nativeViewFactory as NativeViewFactory)
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -195,14 +198,14 @@ class MethodCallHandlerImplNew(
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @Throws(CameraAccessException::class)
     private fun instantiateCamera(call: MethodCall, result: MethodChannel.Result) {
-        handler.postDelayed({
+        handler!!.postDelayed({
             val cameraName = call.argument<String>("cameraName") ?: "0"
             val resolutionPreset = call.argument<String>("resolutionPreset")
                 ?: "low"
             val enableAudio = call.argument<Boolean>("enableAudio")!!
             dartMessenger = DartMessenger(messenger, textureId)
 
-            val preset = Camera.ResolutionPreset.valueOf(resolutionPreset)
+            val preset = ResolutionPreset.valueOf(resolutionPreset)
             val previewSize = CameraUtils.computeBestPreviewSize(cameraName, preset)
             val reply: MutableMap<String, Any> = HashMap()
             reply["textureId"] = textureId
@@ -223,11 +226,6 @@ class MethodCallHandlerImplNew(
         }, 100)
     }
 
-    private fun isFrontFacing(cameraName: String): Boolean {
-        val cameraManager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        val characteristics = cameraManager.getCameraCharacteristics(cameraName)
-        return characteristics.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_FRONT
-    }
 
     // We move catching CameraAccessException out of onMethodCall because it causes a crash
     // on plugin registration for sdks incompatible with Camera2 (< 21). We want this plugin to
