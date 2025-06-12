@@ -1,4 +1,4 @@
-# Flutter RTMP broadcaster
+# Flutter RTMP streaming
 
 Extend the functionality of the Flutter camera plugin with this plugin. Seamlessly integrate RTMP streaming into your Android and iOS applications, while excluding web platforms.
 

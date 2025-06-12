@@ -52,5 +52,5 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.github.pedroSG94.RootEncoder:library:2.6.1'
     //Optional, allow use CameraXSource and CameraUvcSource 
-    implementation 'com.github.pedroSG94.RootEncoder:extra-sources:2.6.1'
+    // implementation 'com.github.pedroSG94.RootEncoder:extra-sources:2.6.1'
 }
