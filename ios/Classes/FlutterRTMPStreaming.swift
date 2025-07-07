@@ -193,30 +193,36 @@ class MyRTMPStreamQoSDelagate: RTMPStreamDelegate {
     let maxBitrate: UInt32 = 2500 * 1024
     let incrementBitrate: UInt32 = 512 * 1024
     
-    func didPublishSufficientBW(_ stream: RTMPStream, withConnection: RTMPConnection) {
+    func rtmpStream(_ stream: RTMPStream, publishSufficientBWOccured connection: RTMPConnection) {
         guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
         
         var newVideoBitrate = videoBitrate + incrementBitrate
         if newVideoBitrate > maxBitrate {
             newVideoBitrate = maxBitrate
         }
-        print("didPublishSufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
+        print("publishSufficientBWOccured update: \(videoBitrate) -> \(newVideoBitrate)")
         stream.videoSettings[.bitrate] = newVideoBitrate
     }
     
     
     // detect upload insufficent BandWidth
-    func didPublishInsufficientBW(_ stream:RTMPStream, withConnection:RTMPConnection) {
+    func rtmpStream(_ stream: RTMPStream, publishInsufficientBWOccured connection: RTMPConnection) {
         guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
         
         var         newVideoBitrate = UInt32(videoBitrate / 2)
         if newVideoBitrate < minBitrate {
             newVideoBitrate = minBitrate
         }
-        print("didPublishInsufficientBW update: \(videoBitrate) -> \(newVideoBitrate)")
+        print("publishInsufficientBWOccured update: \(videoBitrate) -> \(newVideoBitrate)")
         stream.videoSettings[.bitrate] = newVideoBitrate
     }
-    
-    func clear() {
-    }
+    func rtmpStreamDidClear(_ stream: RTMPStream){}
+     /// Tells the receiver to playback an audio packet incoming.
+    func rtmpStream(_ stream: RTMPStream, didOutput audio: AVAudioBuffer, presentationTimeStamp: CMTime){}
+    /// Tells the receiver to playback a video packet incoming.
+    func rtmpStream(_ stream: RTMPStream, didOutput video: CMSampleBuffer){}
+    /// Tells the receiver to update statistics.
+    func rtmpStream(_ stream: RTMPStream, updatedStats connection: RTMPConnection){}
+    /// Tells the receiver to video codec error occured.
+    func rtmpStream(_ stream: RTMPStream, videoCodecErrorOccurred error: VideoCodec.Error){}
 }

@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'rtmp_streaming'
-  s.version          = '0.0.1'
+  s.version          = '0.0.2'
   s.summary          = 'FLutter plugin to allow rtmp to work with ios.'
   s.description      = <<-DESC
 A new flutter plugin project.
@@ -15,8 +15,8 @@ A new flutter plugin project.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.dependency 'HaishinKit', '~> 1.0.10'
-  s.platform = :ios, '10.0'
+  s.dependency 'HaishinKit', '~> 1.3.0'
+  s.platform = :ios, '13.0'
 
   # Flutter.framework does not contain a i386 slice. Only x86_64 simulators are supported.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64' }
