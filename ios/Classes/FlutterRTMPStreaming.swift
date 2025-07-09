@@ -16,7 +16,6 @@ public class FlutterRTMPStreaming : NSObject {
     private var name: String? = nil
     private var retries: Int = 0
     private let eventSink: FlutterEventSink
-    private let myDelegate = MyRTMPStreamQoSDelagate()
     
     @objc
     public init(sink: @escaping FlutterEventSink) {
@@ -26,11 +25,24 @@ public class FlutterRTMPStreaming : NSObject {
     @objc
     public func open(url: String, width: Int, height: Int, bitrate: Int) {
         rtmpStream = RTMPStream(connection: rtmpConnection)
-        rtmpStream.captureSettings = [
-            .sessionPreset: AVCaptureSession.Preset.hd1280x720,
-            .continuousAutofocus: true,
-            .continuousExposure: true
-        ]
+        rtmpStream.sessionPreset = .medium
+        guard let device = AVCaptureDevice.default(for: AVMediaType.video) else{
+            print("No video device found")
+            return
+        }
+        do {
+            try device.lockForConfiguration()
+            if device.isFocusModeSupported(.continuousAutoFocus) {
+                device.focusMode = .continuousAutoFocus
+            }
+            if device.isExposureModeSupported(.continuousAutoExposure) {
+                device.exposureMode = .continuousAutoExposure
+            }
+            device.unlockForConfiguration()
+        } catch let error as NSError {
+            print("while locking device for exposurePointOfInterest: \(error)")
+        }
+        
         rtmpConnection.addEventListener(.rtmpStatus, selector:#selector(rtmpStatusHandler), observer: self)
         rtmpConnection.addEventListener(.ioError, selector: #selector(rtmpErrorHandler), observer: self)
         
@@ -48,15 +60,12 @@ public class FlutterRTMPStreaming : NSObject {
             .maxKeyFrameIntervalDuration: 2,
             .bitrate: bitrate
         ]
-        rtmpStream.captureSettings = [
-            .fps: 30
-        ]
-        rtmpStream.delegate = myDelegate
+        rtmpStream.frameRate = 30.0
         self.retries = 0
         // Run this on the ui thread.
         DispatchQueue.main.async {
             if let orientation = DeviceUtil.videoOrientation(by:  UIApplication.shared.statusBarOrientation) {
-                self.rtmpStream.orientation = orientation
+                self.rtmpStream.videoOrientation = orientation
                 print(String(format:"Orient %d", orientation.rawValue))
                 switch (orientation) {
                 case .landscapeLeft, .landscapeRight:
@@ -118,7 +127,6 @@ public class FlutterRTMPStreaming : NSObject {
                    "errorDescription" : "rtmp disconnected"])
         
     }
-    
     @objc
     public func pauseVideoStreaming() {
         rtmpStream.paused = true
@@ -142,8 +150,8 @@ public class FlutterRTMPStreaming : NSObject {
             "bitrate": rtmpStream.videoSettings[.bitrate]!,
             "width": rtmpStream.videoSettings[.width]!,
             "height": rtmpStream.videoSettings[.height]!,
-            "fps": (rtmpStream.captureSettings[.fps]! as! NSNumber).floatValue,
-            "orientation": rtmpStream.orientation.rawValue
+            "fps": rtmpStream.currentFPS,
+            "orientation": rtmpStream.videoOrientation.rawValue
         ]
         //ret["cacheSize"] = rtmpConnection.bandWidth
         //ret["sentAudioFrames"] = rtmpCamera!!.sentAudioFrames
@@ -169,9 +177,7 @@ public class FlutterRTMPStreaming : NSObject {
                 .maxKeyFrameIntervalDuration: 2,
                 .bitrate: 1200 * 1024
             ]
-            rtmpStream.captureSettings = [
-                .fps: 24
-            ]
+            rtmpStream.frameRate = 24
         }
         rtmpStream.appendSampleBuffer( buffer, withType: .video)
     }
@@ -185,44 +191,4 @@ public class FlutterRTMPStreaming : NSObject {
     public func close() {
         rtmpConnection.close()
     }
-}
-
-
-class MyRTMPStreamQoSDelagate: RTMPStreamDelegate {
-    let minBitrate: UInt32 = 300 * 1024
-    let maxBitrate: UInt32 = 2500 * 1024
-    let incrementBitrate: UInt32 = 512 * 1024
-    
-    func rtmpStream(_ stream: RTMPStream, publishSufficientBWOccured connection: RTMPConnection) {
-        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
-        
-        var newVideoBitrate = videoBitrate + incrementBitrate
-        if newVideoBitrate > maxBitrate {
-            newVideoBitrate = maxBitrate
-        }
-        print("publishSufficientBWOccured update: \(videoBitrate) -> \(newVideoBitrate)")
-        stream.videoSettings[.bitrate] = newVideoBitrate
-    }
-    
-    
-    // detect upload insufficent BandWidth
-    func rtmpStream(_ stream: RTMPStream, publishInsufficientBWOccured connection: RTMPConnection) {
-        guard let videoBitrate = stream.videoSettings[.bitrate] as? UInt32 else { return }
-        
-        var         newVideoBitrate = UInt32(videoBitrate / 2)
-        if newVideoBitrate < minBitrate {
-            newVideoBitrate = minBitrate
-        }
-        print("publishInsufficientBWOccured update: \(videoBitrate) -> \(newVideoBitrate)")
-        stream.videoSettings[.bitrate] = newVideoBitrate
-    }
-    func rtmpStreamDidClear(_ stream: RTMPStream){}
-     /// Tells the receiver to playback an audio packet incoming.
-    func rtmpStream(_ stream: RTMPStream, didOutput audio: AVAudioBuffer, presentationTimeStamp: CMTime){}
-    /// Tells the receiver to playback a video packet incoming.
-    func rtmpStream(_ stream: RTMPStream, didOutput video: CMSampleBuffer){}
-    /// Tells the receiver to update statistics.
-    func rtmpStream(_ stream: RTMPStream, updatedStats connection: RTMPConnection){}
-    /// Tells the receiver to video codec error occured.
-    func rtmpStream(_ stream: RTMPStream, videoCodecErrorOccurred error: VideoCodec.Error){}
 }
