@@ -57,11 +57,11 @@ public class FlutterRTMPStreaming : NSObject {
         // TODO: Da correggere
         rtmpStream.videoSettings = VideoCodecSettings(
             videoSize: CGSize(width: .init(width), height: .init(height)),
+            bitRate: bitrate,
             profileLevel:  kVTProfileLevel_H264_Baseline_AutoLevel as String,
-            bitRate: UInt32(bitrate),
-            maxKeyFrameIntervalDuration: 2,
             scalingMode: .trim,
             bitRateMode: .average,
+            maxKeyFrameIntervalDuration: 2,
             allowFrameReordering: nil,
             isHardwareEncoderEnabled: true
             ) 
@@ -169,22 +169,22 @@ public class FlutterRTMPStreaming : NSObject {
             let dimensions = CMVideoFormatDescriptionGetDimensions(description)
             rtmpStream.videoSettings = VideoCodecSettings(
                 videoSize: CGSize(width: .init(Int(dimensions.width)), height: .init(Int(dimensions.height))),
-                profileLevel:  kVTProfileLevel_H264_Baseline_AutoLevel as String,
                 bitRate: 1200 * 1024,
-                maxKeyFrameIntervalDuration: 2,
+                profileLevel:  kVTProfileLevel_H264_Baseline_AutoLevel as String,
                 scalingMode: .trim,
                 bitRateMode: .average,
+                maxKeyFrameIntervalDuration: 2,
                 allowFrameReordering: nil,
                 isHardwareEncoderEnabled: true
             ) 
             rtmpStream.frameRate = 24
         }
-        rtmpStream.appendSampleBuffer(buffer)
+        rtmpStream.append(buffer)
     }
     
     @objc
     public func addAudioData(buffer: CMSampleBuffer) {
-        rtmpStream.appendSampleBuffer(buffer)
+        rtmpStream.append(buffer)
     }
     
     @objc
@@ -195,12 +195,12 @@ public class FlutterRTMPStreaming : NSObject {
 
 
 class MyRTMPStreamQoSDelagate: RTMPConnectionDelegate {
-    let minBitrate: UInt32 = 300 * 1024
-    let maxBitrate: UInt32 = 2500 * 1024
-    let incrementBitrate: UInt32 = 512 * 1024
+    let minBitrate: Int = 300 * 1024
+    let maxBitrate: Int = 2500 * 1024
+    let incrementBitrate: Int = 512 * 1024
     
     func connection(_ connection: RTMPConnection, publishSufficientBWOccured stream: RTMPStream) {
-        guard let videoBitrate = stream.videoSettings.bitRate as? UInt32 else { return }
+        guard let videoBitrate = stream.videoSettings.bitRate as? Int else { return }
         
         var newVideoBitrate = videoBitrate + incrementBitrate
         if newVideoBitrate > maxBitrate {
@@ -213,9 +213,9 @@ class MyRTMPStreamQoSDelagate: RTMPConnectionDelegate {
     
     // detect upload insufficent BandWidth
     func connection(_ connection: RTMPConnection, publishInsufficientBWOccured stream: RTMPStream) {
-        guard let videoBitrate = stream.videoSettings.bitRate as? UInt32 else { return }
+        guard let videoBitrate = stream.videoSettings.bitRate as? Int else { return }
         
-        var newVideoBitrate = UInt32(videoBitrate / 2)
+        var newVideoBitrate = Int(videoBitrate / 2)
         if newVideoBitrate < minBitrate {
             newVideoBitrate = minBitrate
         }
