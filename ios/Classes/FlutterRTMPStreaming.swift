@@ -56,7 +56,7 @@ public class FlutterRTMPStreaming : NSObject {
         
         // TODO: Da correggere
         rtmpStream.videoSettings = VideoCodecSettings(
-            videoSize: .init(width: Int32(width), height: Int32(height)),
+            videoSize: CGSize(width: .init(width), height: .init(height)),
             profileLevel:  kVTProfileLevel_H264_Baseline_AutoLevel as String,
             bitRate: UInt32(bitrate),
             maxKeyFrameIntervalDuration: 2,
@@ -77,7 +77,7 @@ public class FlutterRTMPStreaming : NSObject {
                 
                 switch orientation {
                 case .landscapeLeft, .landscapeRight:
-                     self.rtmpStream.videoSettings.videoSize = VideoSize(width: Int32(width), height: Int32(height))
+                     self.rtmpStream.videoSettings.videoSize = CGSize(width: .init(width), height: .init(height))
                     break;
                 default:
                     break
@@ -168,7 +168,7 @@ public class FlutterRTMPStreaming : NSObject {
         if let description = CMSampleBufferGetFormatDescription(buffer) {
             let dimensions = CMVideoFormatDescriptionGetDimensions(description)
             rtmpStream.videoSettings = VideoCodecSettings(
-                videoSize: .init(width: Int32(dimensions.width), height: Int32(dimensions.height)),
+                videoSize: CGSize(width: .init(Int(dimensions.width)), height: .init(Int(dimensions.height))),
                 profileLevel:  kVTProfileLevel_H264_Baseline_AutoLevel as String,
                 bitRate: 1200 * 1024,
                 maxKeyFrameIntervalDuration: 2,
