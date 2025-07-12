@@ -2,14 +2,14 @@ group 'com.app.rtmp_publisher'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.1.21'
+    ext.kotlin_version = '2.2.0'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.10.0'
+        classpath 'com.android.tools.build:gradle:8.11.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -27,8 +27,8 @@ apply plugin: 'kotlin-android'
 
 android {
     namespace 'com.app.rtmp_publisher'
-    compileSdkVersion 33
-    buildToolsVersion "33.0.1"
+    compileSdkVersion 35
+    buildToolsVersion "35.0.0"
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -48,9 +48,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.annotation:annotation:1.9.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.github.pedroSG94.RootEncoder:library:2.6.1'
-    //Optional, allow use CameraXSource and CameraUvcSource 
-    // implementation 'com.github.pedroSG94.RootEncoder:extra-sources:2.6.1'
+    implementation 'com.github.pedroSG94.RootEncoder:library:2.6.2'
 }

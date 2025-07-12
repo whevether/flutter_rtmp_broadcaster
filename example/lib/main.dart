@@ -40,9 +40,11 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   String? videoPath;
   String? url;
   VoidCallback? videoPlayerListener;
-  bool enableAudio = true;
+  bool enableAudio = true; // 是否启用音频
   bool useOpenGL = true;
-  TextEditingController _textFieldController = TextEditingController(text: "rtmp://192.168.1.18/live/111");
+  bool switchCamera = false; // 为false 表示使用前置摄像头，为true表示使用后置摄像头
+  bool isFlashLight = false; // false表示关闭闪光灯，true表示打开闪光灯
+  TextEditingController _textFieldController = TextEditingController(text: "rtmp://192.168.1.20/live/show1");
 
   bool get isStreaming => controller?.value.isStreamingVideoRtmp ?? false;
   bool isVisible = true;
@@ -133,8 +135,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
           _toggleAudioWidget(),
           Padding(
             padding: const EdgeInsets.all(5.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+            child: Wrap(
               children: <Widget>[
                 _cameraTogglesRowWidget(),
                 _thumbnailWidget(),
@@ -167,25 +168,80 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
 
   /// Toggle recording audio
   Widget _toggleAudioWidget() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 25),
-      child: Row(
+    return  Wrap(
         children: <Widget>[
-          const Text('Enable Audio:'),
+          // const Text('Enable Audio:'),
+          // Switch(
+          //   value: enableAudio,
+          //   onChanged: (bool value) {
+          //     enableAudio = value;
+          //     setState(() {
+                
+          //     });
+          //     if (controller != null) {
+          //       onNewCameraSelected(controller!.description);
+          //     }
+          //   },
+          // ),
+          const SizedBox(width: 5,),
+          Text('switch ${switchCamera ? 'back' : 'font'} Camera'),
+          Switch(
+            value: switchCamera,
+            onChanged: (bool value) async {
+              if (controller != null) {
+                 switchCamera = value;
+                  setState(() {
+                    
+                  });
+                String cameraId = switchCamera ? "0" : "1";
+                await controller!.switchCamera(cameraId);
+              }else {
+                showInSnackBar('Please select a camera first.');
+              }
+            },
+          ),
+          const SizedBox(width: 5,),
+           Text('${enableAudio ? 'Enable' : 'Disable'} Audio'),
           Switch(
             value: enableAudio,
-            onChanged: (bool value) {
-              enableAudio = value;
+            onChanged: (bool value) async {
+              
               if (controller != null) {
-                onNewCameraSelected(controller!.description);
+                enableAudio = value;
+                setState(() {
+                  
+                });
+                enableAudio
+                    ? await controller!.onEnableAudio()
+                    : await controller!.onDisableAudio();
+              }else{
+                showInSnackBar('Please select a camera first.');
+              }
+            },
+          ),
+          const SizedBox(width: 5,),
+          Text('${isFlashLight ? 'Enable' : 'Disable'} FlashLight'),
+          Switch(
+            value: isFlashLight,
+            onChanged: (bool value) async {
+              
+              if (controller != null) {
+                isFlashLight = value;
+                setState(() {
+                  
+                });
+                isFlashLight
+                    ? await controller!.onFlashLight()
+                    : await controller!.offFlashLight();
+              }else{
+                showInSnackBar('Please select a camera first.');
               }
             },
           ),
         ],
-      ),
+      
     );
   }
-
   /// Display the thumbnail of the captured image or video.
   Widget _thumbnailWidget() {
     return Expanded(
@@ -272,7 +328,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
       }
     }
 
-    return Row(children: toggles);
+    return Wrap(children: toggles);
   }
 
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
@@ -326,6 +382,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
     }
 
     if (mounted) {
+      final number = int.tryParse(cameraDescription.name!);
+      switchCamera = number?.isEven ?? false;
       setState(() {});
     }
   }

@@ -944,7 +944,168 @@ class CameraController extends ValueNotifier<CameraValue> {
       throw CameraException(e.code, e.message);
     }
   }
+  /// switch Camera[cameraId`].
+  ///
+  /// This switch Camera to the camera with the given [cameraId].
+  ///
+  /// Throws a [CameraException] if the capture fails.
+  Future<void> switchCamera(String cameraId) async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'startVideoStreaming was called on uninitialized CameraController',
+      );
+    }
+    if (!value.isStreamingVideoRtmp!) {
+      throw CameraException(
+        'No video is recording',
+        'resumeVideoStreaming was called when no video is streaming.',
+      );
+    }
+    if(!Platform.isAndroid){
+      throw CameraException(
+        'Currently only supports Android platform',
+        'Please use on Android platform',
+      );
+    }
 
+    try {
+      await _channel
+          .invokeMethod<void>('switchCamera', <String, dynamic>{
+        'cameraId': cameraId
+      });
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+  /// Enable Audio.
+  ///
+  /// This Enable Audio
+  ///
+  /// Throws a [CameraException] if the capture fails.
+  Future<void> onEnableAudio() async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'startVideoStreaming was called on uninitialized CameraController',
+      );
+    }
+    if (!value.isStreamingVideoRtmp!) {
+      throw CameraException(
+        'No video is recording',
+        'resumeVideoStreaming was called when no video is streaming.',
+      );
+    }
+    if(!Platform.isAndroid){
+      throw CameraException(
+        'Currently only supports Android platform',
+        'Please use on Android platform',
+      );
+    }
+    try {
+      await _channel
+          .invokeMethod<void>('onEnableAudio', <String, dynamic>{
+      });
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+  /// Disable Audio
+  ///
+  /// This Disable Audio
+  ///
+  /// Throws a [CameraException] if the capture fails.
+  Future<void> onDisableAudio() async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'startVideoStreaming was called on uninitialized CameraController',
+      );
+    }
+    if (!value.isStreamingVideoRtmp!) {
+      throw CameraException(
+        'No video is recording',
+        'resumeVideoStreaming was called when no video is streaming.',
+      );
+    }
+    if(!Platform.isAndroid){
+      throw CameraException(
+        'Currently only supports Android platform',
+        'Please use on Android platform',
+      );
+    }
+    try {
+      await _channel
+          .invokeMethod<void>('onDisableAudio', <String, dynamic>{
+      });
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+  /// Flash Light
+  ///
+  /// This Flash Light
+  ///
+  /// Throws a [CameraException] if the capture fails.
+  Future<void> onFlashLight() async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'startVideoStreaming was called on uninitialized CameraController',
+      );
+    }
+    if (!value.isStreamingVideoRtmp!) {
+      throw CameraException(
+        'No video is recording',
+        'resumeVideoStreaming was called when no video is streaming.',
+      );
+    }
+    if(!Platform.isAndroid){
+      throw CameraException(
+        'Currently only supports Android platform',
+        'Please use on Android platform',
+      );
+    }
+    try {
+      await _channel
+          .invokeMethod<void>('onFlashLight', <String, dynamic>{
+      });
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+  /// off Flash Light
+  ///
+  /// This off Flash Light
+  ///
+  /// Throws a [CameraException] if the capture fails.
+  Future<void> offFlashLight() async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'startVideoStreaming was called on uninitialized CameraController',
+      );
+    }
+    if (!value.isStreamingVideoRtmp!) {
+      throw CameraException(
+        'No video is recording',
+        'resumeVideoStreaming was called when no video is streaming.',
+      );
+    }
+    if(!Platform.isAndroid){
+      throw CameraException(
+        'Currently only supports Android platform',
+        'Please use on Android platform',
+      );
+    }
+    try {
+      await _channel
+          .invokeMethod<void>('offFlashLight', <String, dynamic>{
+      });
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
   /// Releases the resources of this camera.
   @override
   Future<void> dispose() async {

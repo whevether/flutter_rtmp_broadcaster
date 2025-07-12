@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import android.util.Size
 import android.view.OrientationEventListener
 import androidx.annotation.RequiresApi
 import com.app.rtmp_publisher.CameraPermissions.ResolutionPreset
@@ -27,7 +28,7 @@ class MethodCallHandlerImplNew(
 ) : MethodCallHandler {
 
     private val methodChannel: MethodChannel
-    private val imageStreamChannel: EventChannel
+//    private val imageStreamChannel: EventChannel
     private var currentOrientation = OrientationEventListener.ORIENTATION_UNKNOWN
     private var dartMessenger: DartMessenger? = null
     private var nativeViewFactory: NativeViewFactory? = null
@@ -43,7 +44,7 @@ class MethodCallHandlerImplNew(
         handler = Handler(handlerThread.looper)
         Log.d("TAG", "init $platformViewRegistry")
         methodChannel = MethodChannel(messenger, "plugins.flutter.io/rtmp_publisher")
-        imageStreamChannel = EventChannel(messenger, "plugins.flutter.io/rtmp_publisher/imageStream")
+//        imageStreamChannel = EventChannel(messenger, "plugins.flutter.io/rtmp_publisher/imageStream")
         methodChannel.setMethodCallHandler(this)
         nativeViewFactory = NativeViewFactory(activity)
 
@@ -155,7 +156,7 @@ class MethodCallHandlerImplNew(
             "startImageStream" -> {
                 Log.i("Stuff", "startImageStream")
                 try {
-                    getCameraView()?.startPreviewWithImageStream(imageStreamChannel)
+                    getCameraView()?.startPreviewWithImageStream(result)
                     result.success(null)
                 } catch (e: Exception) {
                     handleException(e, result)
@@ -180,7 +181,26 @@ class MethodCallHandlerImplNew(
                     handleException(e, result)
                 }
             }
-
+            "switchCamera" -> {
+                Log.i("Stuff", "switchCamera")
+                getCameraView()?.switchCamera(call.argument("cameraId"),result)
+            }
+            "onEnableAudio" -> {
+                Log.i("Stuff", "onEnableAudio")
+                getCameraView()?.onEnableAudio(result)
+            }
+            "onDisableAudio" -> {
+                Log.i("Stuff", "onDisableAudio")
+                getCameraView()?.onDisableAudio(result)
+            }
+            "onFlashLight" -> {
+                Log.i("Stuff", "onFlashLight")
+                getCameraView()?.onFlashLight(result)
+            }
+            "offFlashLight" -> {
+                Log.i("Stuff", "offFlashLight")
+                getCameraView()?.offFlashLight(result)
+            }
             "dispose" -> {
                 Log.i("Stuff", "dispose")
                 // Native camera view handles the view lifecircle by themselves
@@ -206,11 +226,12 @@ class MethodCallHandlerImplNew(
             dartMessenger = DartMessenger(messenger, textureId)
 
             val preset = ResolutionPreset.valueOf(resolutionPreset)
-            val previewSize = CameraUtils.computeBestPreviewSize(cameraName, preset)
+            val previewSize = CameraUtils.computeBestPreviewSize(activity,cameraName, preset)
+            val size = previewSize["size"] as Size
             val reply: MutableMap<String, Any> = HashMap()
             reply["textureId"] = textureId
-            reply["previewWidth"] = previewSize.width
-            reply["previewHeight"] = previewSize.height
+            reply["previewWidth"] = size.width
+            reply["previewHeight"] = size.height
             reply["previewQuarterTurns"] = currentOrientation / 90
             Log.i(
                 "TAG",
