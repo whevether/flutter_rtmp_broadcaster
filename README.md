@@ -21,8 +21,6 @@ Developing and maintaining this plugin takes time and effort. If you find this p
 
 You can make a donation and buy me a cup of coffee to keep the momentum going:
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/emiliodallatorre)
-
 Your support is invaluable, and every donation is deeply appreciated. Thank you for helping to make this plugin even better! 🙏
 
 ## Usage
@@ -93,7 +91,7 @@ For an illustrative implementation of this plugin, you can explore the [example 
 
 If you encounter any issues while using this plugin, don't hesitate to seek assistance. To report problems or unexpected behavior, please open an issue on the [GitHub repository](https://github.com/whevether/flutter_rtmp_broadcaster). I will do my best to address the issues and provide solutions. However, please understand that my availability for addressing issues is limited due to time constraints.
 
-For those in need of expedited and prioritized support, I offer paid fast support services. If you require immediate assistance, personalized guidance, or customized solutions, feel free to reach out to me at [info@emiliodallatorre.it](mailto:info@emiliodallatorre.it) to discuss potential support options.
+For those in need of expedited and prioritized support, I offer paid fast support services. If you require immediate assistance, personalized guidance, or customized solutions, feel free to reach out to me at [info@whevether@outlook.com](mailto:whevether@outlook.com) to discuss potential support options.
 
 Your feedback is crucial in improving this plugin's functionality and ensuring its reliability. Thank you for contributing to the ongoing development of this plugin!
 
