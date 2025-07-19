@@ -32,9 +32,11 @@ IconData getCameraLensIcon(CameraLensDirection? direction) {
   }
 }
 
-void logError(String code, String message) => print('Error: $code\nError Message: $message');
+void logError(String code, String message) =>
+    print('Error: $code\nError Message: $message');
 
-class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindingObserver {
+class _CameraExampleHomeState extends State<CameraExampleHome>
+    with WidgetsBindingObserver {
   CameraController? controller;
   String? imagePath;
   String? videoPath;
@@ -44,13 +46,13 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   bool useOpenGL = true;
   bool switchCamera = false; // 为false 表示使用前置摄像头，为true表示使用后置摄像头
   bool isFlashLight = false; // false表示关闭闪光灯，true表示打开闪光灯
-  TextEditingController _textFieldController = TextEditingController(text: "rtmp://192.168.1.20/live/show1");
+  TextEditingController _textFieldController =
+      TextEditingController(text: "rtmp://192.168.1.20/live/show1");
 
   bool get isStreaming => controller?.value.isStreamingVideoRtmp ?? false;
   bool isVisible = true;
 
   bool get isControllerInitialized => controller?.value.isInitialized ?? false;
-  bool get isStreamingVideoRtmp => controller?.value.isStreamingVideoRtmp ?? false;
   bool get isRecordingVideo => controller?.value.isRecordingVideo ?? false;
   bool get isRecordingPaused => controller?.value.isRecordingPaused ?? false;
   bool get isStreamingPaused => controller?.value.isStreamingPaused ?? false;
@@ -77,18 +79,10 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
     }
     if (state == AppLifecycleState.paused) {
       isVisible = false;
-      if (isStreaming) {
-        await pauseVideoStreaming();
-      }
+      await pauseVideoRecording();
     } else if (state == AppLifecycleState.resumed) {
       isVisible = true;
-      if (controller != null) {
-        if (isStreaming) {
-          await resumeVideoStreaming();
-        } else {
-          onNewCameraSelected(controller!.description);
-        }
-      }
+      await resumeVideoRecording();
     }
   }
 
@@ -99,9 +93,9 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
     Color color = Colors.grey;
 
     if (controller != null) {
-      if (controller!.value.isRecordingVideo ?? false) {
+      if (isRecordingVideo) {
         color = Colors.redAccent;
-      } else if (controller!.value.isStreamingVideoRtmp ?? false) {
+      } else if (isStreaming) {
         color = Colors.blueAccent;
       }
     }
@@ -168,80 +162,78 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
 
   /// Toggle recording audio
   Widget _toggleAudioWidget() {
-    return  Wrap(
-        children: <Widget>[
-          // const Text('Enable Audio:'),
-          // Switch(
-          //   value: enableAudio,
-          //   onChanged: (bool value) {
-          //     enableAudio = value;
-          //     setState(() {
-                
-          //     });
-          //     if (controller != null) {
-          //       onNewCameraSelected(controller!.description);
-          //     }
-          //   },
-          // ),
-          const SizedBox(width: 5,),
-          Text('switch ${switchCamera ? 'back' : 'font'} Camera'),
-          Switch(
-            value: switchCamera,
-            onChanged: (bool value) async {
-              if (controller != null) {
-                 switchCamera = value;
-                  setState(() {
-                    
-                  });
-                String cameraId = switchCamera ? "0" : "1";
-                await controller!.switchCamera(cameraId);
-              }else {
-                showInSnackBar('Please select a camera first.');
-              }
-            },
-          ),
-          const SizedBox(width: 5,),
-           Text('${enableAudio ? 'Enable' : 'Disable'} Audio'),
-          Switch(
-            value: enableAudio,
-            onChanged: (bool value) async {
-              
-              if (controller != null) {
-                enableAudio = value;
-                setState(() {
-                  
-                });
-                enableAudio
-                    ? await controller!.onEnableAudio()
-                    : await controller!.onDisableAudio();
-              }else{
-                showInSnackBar('Please select a camera first.');
-              }
-            },
-          ),
-          const SizedBox(width: 5,),
-          Text('${isFlashLight ? 'Enable' : 'Disable'} FlashLight'),
-          Switch(
-            value: isFlashLight,
-            onChanged: (bool value) async {
-              
-              if (controller != null) {
-                isFlashLight = value;
-                setState(() {
-                  
-                });
-                isFlashLight
-                    ? await controller!.onFlashLight()
-                    : await controller!.offFlashLight();
-              }else{
-                showInSnackBar('Please select a camera first.');
-              }
-            },
-          ),
-        ],
-      
+    return Wrap(
+      children: <Widget>[
+        // const Text('Enable Audio:'),
+        // Switch(
+        //   value: enableAudio,
+        //   onChanged: (bool value) {
+        //     enableAudio = value;
+        //     setState(() {
+
+        //     });
+        //     if (controller != null) {
+        //       onNewCameraSelected(controller!.description);
+        //     }
+        //   },
+        // ),
+        const SizedBox(
+          width: 5,
+        ),
+        Text('switch ${switchCamera ? 'back' : 'font'} Camera'),
+        Switch(
+          value: switchCamera,
+          onChanged: (bool value) async {
+            if (controller != null) {
+              switchCamera = value;
+              setState(() {});
+              String cameraId = switchCamera ? "0" : "1";
+              await controller!.switchCamera(cameraId);
+            } else {
+              showInSnackBar('Please select a camera first.');
+            }
+          },
+        ),
+        const SizedBox(
+          width: 5,
+        ),
+        Text('${enableAudio ? 'Enable' : 'Disable'} Audio'),
+        Switch(
+          value: enableAudio,
+          onChanged: (bool value) async {
+            if (controller != null) {
+              enableAudio = value;
+              setState(() {});
+              enableAudio
+                  ? await controller!.onEnableAudio()
+                  : await controller!.onDisableAudio();
+            } else {
+              showInSnackBar('Please select a camera first.');
+            }
+          },
+        ),
+        const SizedBox(
+          width: 5,
+        ),
+        Text('${isFlashLight ? 'Enable' : 'Disable'} FlashLight'),
+        Switch(
+          value: isFlashLight,
+          onChanged: (bool value) async {
+            if (controller != null) {
+              isFlashLight = value;
+              setState(() {});
+              isFlashLight
+                  ? await controller!.onFlashLight()
+                  : await controller!.offFlashLight();
+            } else {
+              showInSnackBar('Please select a camera first.');
+            }
+          },
+        ),
+      ],
     );
   }
+
   /// Display the thumbnail of the captured image or video.
   Widget _thumbnailWidget() {
     return Expanded(
@@ -253,7 +245,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
             imagePath == null
                 ? Container()
                 : SizedBox(
-                    child:Image.file(File(imagePath!)),   
+                    child: Image.file(File(imagePath!)),
                     width: 64.0,
                     height: 64.0,
                   ),
@@ -274,13 +266,17 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
         IconButton(
           icon: const Icon(Icons.camera_alt),
           color: Colors.blue,
-          onPressed: controller != null && isControllerInitialized ? onTakePictureButtonPressed : null,
+          onPressed: controller != null && isControllerInitialized
+              ? onTakePictureButtonPressed
+              : null,
         ),
         IconButton(
           icon: const Icon(Icons.videocam),
           color: Colors.blue,
-          onPressed: (){
-            if(controller != null && isControllerInitialized && !isRecordingVideo) {
+          onPressed: () {
+            if (controller != null &&
+                isControllerInitialized &&
+                !isRecordingVideo) {
               onVideoRecordButtonPressed();
             }
           },
@@ -288,19 +284,39 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
         IconButton(
           icon: const Icon(Icons.watch),
           color: Colors.blue,
-          onPressed: controller != null && isControllerInitialized && !isStreamingVideoRtmp ? onVideoStreamingButtonPressed : null,
+          onPressed:
+              controller != null && isControllerInitialized && !isStreaming
+                  ? onVideoStreamingButtonPressed
+                  : null,
         ),
         IconButton(
-          icon: controller != null && (isRecordingPaused || isStreamingPaused) ? Icon(Icons.play_arrow) : Icon(Icons.pause),
+          icon: controller != null && (isRecordingPaused || isStreamingPaused)
+              ? Icon(Icons.play_arrow)
+              : Icon(Icons.pause),
           color: Colors.blue,
-          onPressed: controller != null && isControllerInitialized && (isRecordingVideo || isStreamingVideoRtmp)
-              ? (controller != null && (isRecordingPaused || isStreamingPaused) ? onResumeButtonPressed : onPauseButtonPressed)
-              : null,
+          onPressed: () {
+            if (controller != null &&
+                isControllerInitialized &&
+                (isRecordingVideo || isStreaming)) {
+              if (controller != null &&
+                  (isRecordingPaused || isStreamingPaused)) {
+                onResumeButtonPressed();
+              } else {
+                onPauseButtonPressed();
+              }
+            } else {
+              return null;
+            }
+          },
         ),
         IconButton(
           icon: const Icon(Icons.stop),
           color: Colors.red,
-          onPressed: controller != null && isControllerInitialized && (isRecordingVideo || isStreamingVideoRtmp) ? onStopButtonPressed : null,
+          onPressed: controller != null &&
+                  isControllerInitialized &&
+                  (isRecordingVideo || isStreaming)
+              ? onStopButtonPressed
+              : null,
         )
       ],
     );
@@ -321,7 +337,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
               title: Icon(getCameraLensIcon(cameraDescription.lensDirection)),
               groupValue: controller?.description,
               value: cameraDescription,
-              onChanged: (CameraDescription? cld) => isRecordingVideo ? null : onNewCameraSelected(cld),
+              onChanged: (CameraDescription? cld) =>
+                  isRecordingVideo ? null : onNewCameraSelected(cld),
             ),
           ),
         );
@@ -334,7 +351,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
   void showInSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   void onNewCameraSelected(CameraDescription? cameraDescription) async {
@@ -361,7 +379,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
           await stopVideoStreaming();
         } else {
           try {
-            final Map<dynamic, dynamic> event = controller!.value.event as Map<dynamic, dynamic>;
+            final Map<dynamic, dynamic> event =
+                controller!.value.event as Map<dynamic, dynamic>;
             print('Event $event');
             final String eventType = event['eventType'] as String;
             if (isVisible && isStreaming && eventType == 'rtmp_retry') {
@@ -424,7 +443,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   }
 
   void onStopButtonPressed() {
-    if (this.isStreamingVideoRtmp) {
+    if (this.isStreaming) {
       stopVideoStreaming().then((_) {
         if (mounted) setState(() {});
         showInSnackBar('Video streamed to: $url');
@@ -460,14 +479,14 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   }
 
   void onPauseStreamingButtonPressed() {
-    pauseVideoStreaming().then((_) {
+    pauseVideoRecording().then((_) {
       if (mounted) setState(() {});
       showInSnackBar('Video streaming paused');
     });
   }
 
   void onResumeStreamingButtonPressed() {
-    resumeVideoStreaming().then((_) {
+    resumeVideoRecording().then((_) {
       if (mounted) setState(() {});
       showInSnackBar('Video streaming resumed');
     });
@@ -516,10 +535,10 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
 
   Future<void> pauseVideoRecording() async {
     try {
-      if (controller!.value.isRecordingVideo!) {
+      if (isRecordingVideo) {
         await controller!.pauseVideoRecording();
       }
-      if (controller!.value.isStreamingVideoRtmp!) {
+      if (isStreaming && Platform.isIOS) {
         await controller!.pauseVideoStreaming();
       }
     } on CameraException catch (e) {
@@ -532,10 +551,10 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
 
   Future<void> resumeVideoRecording() async {
     try {
-      if (controller!.value.isRecordingVideo!) {
+      if (isRecordingVideo) {
         await controller!.resumeVideoRecording();
       }
-      if (controller!.value.isStreamingVideoRtmp!) {
+      if (isStreaming && Platform.isIOS) {
         await controller!.resumeVideoStreaming();
       }
     } on CameraException catch (e) {
@@ -562,7 +581,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
             ),
             actions: <Widget>[
               TextButton(
-                child: new Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                child: new Text(
+                    MaterialLocalizations.of(context).cancelButtonLabel),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -584,7 +604,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
       return null;
     }
 
-    if (controller!.value.isStreamingVideoRtmp == true || controller!.value.isStreamingVideoRtmp == true) {
+    if (isStreaming) {
       return null;
     }
 
@@ -616,7 +636,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
       return null;
     }
 
-    if (controller?.value.isStreamingVideoRtmp ?? false) {
+    if (isStreaming) {
       return null;
     }
 
@@ -637,7 +657,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
     if (controller == null || !isControllerInitialized) {
       return;
     }
-    if (!isStreamingVideoRtmp) {
+    if (!isStreaming) {
       return;
     }
 
@@ -648,33 +668,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
       return null;
     }
   }
-
-  Future<void> pauseVideoStreaming() async {
-    if (!isStreamingVideoRtmp) {
-      return null;
-    }
-
-    try {
-      await controller!.pauseVideoStreaming();
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      rethrow;
-    }
-  }
-
-  Future<void> resumeVideoStreaming() async {
-    if (!isStreamingVideoRtmp) {
-      return null;
-    }
-
-    try {
-      await controller!.resumeVideoStreaming();
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      rethrow;
-    }
-  }
-
 
   Future<String?> takePicture() async {
     if (!isControllerInitialized) {
@@ -702,7 +695,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
 
   void _showCameraException(CameraException e) {
     logError(e.code, e.description ?? "No description found");
-    showInSnackBar('Error: ${e.code}\n${e.description ?? "No description found"}');
+    showInSnackBar(
+        'Error: ${e.code}\n${e.description ?? "No description found"}');
   }
 }
 

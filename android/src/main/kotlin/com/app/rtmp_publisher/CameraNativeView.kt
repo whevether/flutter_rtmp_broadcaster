@@ -16,6 +16,7 @@ import android.view.View
 import androidx.annotation.RequiresApi
 import com.app.rtmp_publisher.CameraPermissions.ResolutionPreset
 import com.pedro.common.ConnectChecker
+import com.pedro.encoder.input.video.CameraHelper.Facing
 import com.pedro.encoder.input.video.CameraHelper.Facing.BACK
 import com.pedro.encoder.input.video.CameraHelper.Facing.FRONT
 import com.pedro.encoder.utils.gl.AspectRatioMode
@@ -36,7 +37,7 @@ class CameraNativeView(
 ) :
     PlatformView,
     SurfaceHolder.Callback,
-    ConnectChecker{
+    ConnectChecker {
     private val glView = OpenGlView(activity)
     private val rtmpCamera: RtmpCamera2
     private var isSurfaceCreated = false
@@ -44,6 +45,7 @@ class CameraNativeView(
     private val aBitrate = 128 * 1000
     private val vBitrate = 1200 * 1000
     private val bitrateAdapter: BitrateAdapter
+
     init {
 //        glView.isKeepAspectRatio = true
         glView.setAspectRatioMode(AspectRatioMode.Adjust)
@@ -57,10 +59,11 @@ class CameraNativeView(
             setMaxBitrate(vBitrate + aBitrate)
         }
     }
+
     override fun surfaceCreated(holder: SurfaceHolder) {
         Log.d("CameraNativeView", "surfaceCreated")
         isSurfaceCreated = true
-        if(!rtmpCamera.isOnPreview){
+        if (!rtmpCamera.isOnPreview) {
             startPreview(cameraName)
         }
     }
@@ -77,41 +80,44 @@ class CameraNativeView(
         isSurfaceCreated = false
         activity = null
     }
-     override fun onConnectionStarted(url: String) {
-        }
 
-        override fun onConnectionSuccess() {
-        }
+    override fun onConnectionStarted(url: String) {
+    }
 
-        override fun onNewBitrate(bitrate: Long) {
-            bitrateAdapter.adaptBitrate(bitrate, rtmpCamera.getStreamClient().hasCongestion())
-        }
+    override fun onConnectionSuccess() {
+    }
 
-        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-        override fun onConnectionFailed(reason: String) {
-            activity?.runOnUiThread { //Wait 5s and retry connect stream
-                if (rtmpCamera.streamClient.reTry(5000, reason)) {
-                    dartMessenger?.send(DartMessenger.EventType.RTMP_RETRY, reason)
-                } else {
-                    dartMessenger?.send(DartMessenger.EventType.RTMP_STOPPED, "Failed retry")
-                    rtmpCamera.stopStream()
-                }
+    override fun onNewBitrate(bitrate: Long) {
+        bitrateAdapter.adaptBitrate(bitrate, rtmpCamera.getStreamClient().hasCongestion())
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    override fun onConnectionFailed(reason: String) {
+        activity?.runOnUiThread { //Wait 5s and retry connect stream
+            if (rtmpCamera.streamClient.reTry(5000, reason)) {
+                dartMessenger?.send(DartMessenger.EventType.RTMP_RETRY, reason)
+            } else {
+                dartMessenger?.send(DartMessenger.EventType.RTMP_STOPPED, "Failed retry")
+                rtmpCamera.stopStream()
             }
         }
+    }
 
-        override fun onDisconnect() {
-            activity?.runOnUiThread {
-                dartMessenger?.send(DartMessenger.EventType.RTMP_STOPPED, "Disconnected")
-            }
+    override fun onDisconnect() {
+        activity?.runOnUiThread {
+            dartMessenger?.send(DartMessenger.EventType.RTMP_STOPPED, "Disconnected")
         }
+    }
 
-        override fun onAuthError() {
-            activity?.runOnUiThread {
-                dartMessenger?.send(DartMessenger.EventType.ERROR, "Auth error")
-            }
+    override fun onAuthError() {
+        activity?.runOnUiThread {
+            dartMessenger?.send(DartMessenger.EventType.ERROR, "Auth error")
         }
-        override fun onAuthSuccess() {
-        }
+    }
+
+    override fun onAuthSuccess() {
+    }
+
     fun close() {
         Log.d("CameraNativeView", "close")
     }
@@ -120,7 +126,11 @@ class CameraNativeView(
         Log.d("CameraNativeView", "takePicture filePath: $filePath result: $result")
         val file: File = File(filePath)
         if (file.exists()) {
-            result.error("fileExists", "File at path '$filePath' already exists. Cannot overwrite.", null)
+            result.error(
+                "fileExists",
+                "File at path '$filePath' already exists. Cannot overwrite.",
+                null
+            )
             return
         }
         glView.takePhoto {
@@ -143,7 +153,11 @@ class CameraNativeView(
 
         val file = File(filePath)
         if (file.exists()) {
-            result.error("fileExists", "File at path '$filePath' already exists. Cannot overwrite.", null)
+            result.error(
+                "fileExists",
+                "File at path '$filePath' already exists. Cannot overwrite.",
+                null
+            )
             return
         }
         Log.d("CameraNativeView", "startVideoRecording filePath: $filePath result: $result")
@@ -155,9 +169,9 @@ class CameraNativeView(
                 streamingSize.videoBitRate
             )*/
         //判断如果不是视频流的话并且其用了音频
-        try{
+        try {
             if (!rtmpCamera.isStreaming) {
-                val streamingSize = CameraUtils.computeBestPreviewSize(activity,cameraName, preset)
+                val streamingSize = CameraUtils.computeBestPreviewSize(activity, cameraName, preset)
                 val size = streamingSize["size"] as Size
                 val bitrateRes = streamingSize["bitrate"] as Int
                 if ((enableAudio && rtmpCamera.prepareAudio()) && rtmpCamera.prepareVideo(
@@ -168,7 +182,7 @@ class CameraNativeView(
                 ) {
                     rtmpCamera.startRecord(filePath)
                 }
-            
+
             } else {
                 rtmpCamera.startRecord(filePath)
             }
@@ -178,7 +192,7 @@ class CameraNativeView(
         } catch (e: IOException) {
             result.error("videoRecordingFailed", e.message, null)
         }
-        
+
     }
 
 
@@ -191,7 +205,7 @@ class CameraNativeView(
 
         try {
             if (!rtmpCamera.isStreaming) {
-                val streamingSize = CameraUtils.computeBestPreviewSize(activity,cameraName, preset)
+                val streamingSize = CameraUtils.computeBestPreviewSize(activity, cameraName, preset)
                 val size = streamingSize["size"] as Size
                 val bitrateRes = streamingSize["bitrate"] as Int
                 if (rtmpCamera.isRecording || rtmpCamera.prepareAudio() && rtmpCamera.prepareVideo(
@@ -203,7 +217,11 @@ class CameraNativeView(
                     // ready to start streaming
                     rtmpCamera.startStream(url)
                 } else {
-                    result.error("videoStreamingFailed", "Error preparing stream, This device cant do it", null)
+                    result.error(
+                        "videoStreamingFailed",
+                        "Error preparing stream, This device cant do it",
+                        null
+                    )
                     return
                 }
             } else {
@@ -217,7 +235,12 @@ class CameraNativeView(
         }
     }
 
-    fun startVideoRecordingAndStreaming(filePath: String?, url: String?, bitrate: Int?, result: MethodChannel.Result) {
+    fun startVideoRecordingAndStreaming(
+        filePath: String?,
+        url: String?,
+        bitrate: Int?,
+        result: MethodChannel.Result
+    ) {
         if (filePath == null) {
             result.error("fileExists", "Must specify a filePath.", null)
             return
@@ -249,10 +272,15 @@ class CameraNativeView(
         // TODO: Implement resume video streaming
         result.error("resumeVideoStreaming", "安卓暂时不支持恢复播放", null)
     }
+
     //启用低光模式
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun onFlashLight(result: MethodChannel.Result){
+    fun onFlashLight(result: MethodChannel.Result) {
         try {
+            if(rtmpCamera.cameraFacing != BACK){
+                result.error("enableLanternFailed", "camera is Not BACK", null)
+                return
+            }
             rtmpCamera.enableLantern()
         } catch (e: CameraAccessException) {
             result.error("enableLanternFailed", e.message, null)
@@ -260,10 +288,15 @@ class CameraNativeView(
             result.error("enableLanternFailed", e.message, null)
         }
     }
+
     //关闭低光模式
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun offFlashLight(result: MethodChannel.Result){
+    fun offFlashLight(result: MethodChannel.Result) {
         try {
+            if(rtmpCamera.cameraFacing != BACK){
+                result.error("enableLanternFailed", "camera is Not BACK", null)
+                return
+            }
             rtmpCamera.disableLantern()
         } catch (e: CameraAccessException) {
             result.error("disableLanternFailed", e.message, null)
@@ -271,9 +304,10 @@ class CameraNativeView(
             result.error("disableLanternFailed", e.message, null)
         }
     }
+
     //切换相机式
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun switchCamera(cameraId: String?,result: MethodChannel.Result){
+    fun switchCamera(cameraId: String?, result: MethodChannel.Result) {
         if (cameraId == null) {
             result.error("cameraIdExist", "empty cameraId!", null)
             return
@@ -288,9 +322,10 @@ class CameraNativeView(
 
 
     }
+
     //启用声音
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun onEnableAudio(result: MethodChannel.Result){
+    fun onEnableAudio(result: MethodChannel.Result) {
         try {
             rtmpCamera.enableAudio()
         } catch (e: CameraAccessException) {
@@ -299,9 +334,10 @@ class CameraNativeView(
             result.error("enableAudioFailed", e.message, null)
         }
     }
+
     //关闭声音
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun onDisableAudio(result: MethodChannel.Result){
+    fun onDisableAudio(result: MethodChannel.Result) {
         try {
             rtmpCamera.disableAudio()
         } catch (e: CameraAccessException) {
@@ -310,16 +346,31 @@ class CameraNativeView(
             result.error("disableAudioFailed", e.message, null)
         }
     }
+
     //设置滤镜
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun setFilter(filter: BaseFilterRender){
-        rtmpCamera.glInterface?.setFilter(filter)
+    fun setFilter(filter: BaseFilterRender) {
+        try {
+            rtmpCamera.glInterface?.setFilter(filter)
+        } catch (e: CameraAccessException) {
+            dartMessenger?.send(DartMessenger.EventType.ERROR, "setFilterFailed: ${e.message}")
+        } catch (e: IOException) {
+            dartMessenger?.send(DartMessenger.EventType.ERROR, "setFilterFailed: ${e.message}")
+        }
     }
-     //移除滤镜
+
+    //移除滤镜
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    fun removeFilter(filter: BaseFilterRender){
-        rtmpCamera.glInterface?.removeFilter(filter)
+    fun removeFilter(filter: BaseFilterRender) {
+        try {
+            rtmpCamera.glInterface?.removeFilter(filter)
+        } catch (e: CameraAccessException) {
+            dartMessenger?.send(DartMessenger.EventType.ERROR, "removeFilterFailed: ${e.message}")
+        } catch (e: IOException) {
+            dartMessenger?.send(DartMessenger.EventType.ERROR, "removeFilterFailed: ${e.message}")
+        }
     }
+
     fun stopVideoRecordingOrStreaming(result: MethodChannel.Result) {
         try {
             rtmpCamera.apply {
@@ -361,13 +412,37 @@ class CameraNativeView(
     }
 
     fun pauseVideoRecording(result: MethodChannel.Result) {
-        // TODO: Implement pause Video Recording
-        result.error("pauseVideoRecording", "安卓暂时不支持暂停录制", null)
+        try {
+            if (!rtmpCamera.isRecording) {
+                result.error("pauseVideoRecording", "没有正在录制的视频", null)
+                return
+            }
+            rtmpCamera.pauseRecord();
+        } catch (e: CameraAccessException) {
+            result.error("pauseVideoRecording", e.message, null)
+            return
+        } catch (e: IllegalStateException) {
+            result.error("pauseVideoRecording", e.message, null)
+            return
+        }
+
     }
 
     fun resumeVideoRecording(result: MethodChannel.Result) {
-        result.error("resumeVideoRecording", "安卓暂时不支持恢复录制", null)
-        // TODO: Implement resume video recording
+        try {
+            if (!rtmpCamera.isRecording) {
+                result.error("resumeVideoRecording", "没有正在录制的视频", null)
+                return
+            }
+            rtmpCamera.resumeRecord()
+        } catch (e: CameraAccessException) {
+            result.error("resumeVideoRecording", e.message, null)
+            return
+        } catch (e: IllegalStateException) {
+            result.error("resumeVideoRecording", e.message, null)
+            return
+        }
+
     }
 
     fun startPreviewWithImageStream(result: MethodChannel.Result) {
@@ -387,16 +462,25 @@ class CameraNativeView(
         if (isSurfaceCreated) {
             try {
 //                Log.d("error", targetCamera)
-                val previewSize = CameraUtils.computeBestPreviewSize(activity,cameraName, preset)
+                val previewSize = CameraUtils.computeBestPreviewSize(activity, cameraName, preset)
                 val size = previewSize["size"] as Size
-                rtmpCamera.startPreview(if (isFrontFacing(targetCamera))  FRONT else BACK, size.width, size.height)
+                rtmpCamera.startPreview(
+                    if (isFrontFacing(targetCamera)) FRONT else BACK,
+                    size.width,
+                    size.height
+                )
             } catch (e: CameraAccessException) {
-//                close()
-                activity?.runOnUiThread { dartMessenger?.send(DartMessenger.EventType.ERROR, "CameraAccessException") }
+                close()
+                activity?.runOnUiThread {
+                    dartMessenger?.send(
+                        DartMessenger.EventType.ERROR,
+                        "CameraAccessException"
+                    )
+                }
                 return
             }
         }
-        
+
     }
 
     fun getStreamStatistics(result: MethodChannel.Result) {
@@ -423,12 +507,12 @@ class CameraNativeView(
         activity = null
     }
 
-     private fun isFrontFacing(cameraName: String): Boolean {
-         val cameraManager = activity?.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
-         if(cameraManager == null){
-             throw Exception("相机是空的")
-         }
-         val characteristics = cameraManager.getCameraCharacteristics(cameraName)
-         return characteristics.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_FRONT
-     }
+    private fun isFrontFacing(cameraName: String): Boolean {
+        val cameraManager = activity?.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
+        if (cameraManager == null) {
+            throw Exception("相机是空的")
+        }
+        val characteristics = cameraManager.getCameraCharacteristics(cameraName)
+        return characteristics.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_FRONT
+    }
 }

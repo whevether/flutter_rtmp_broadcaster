@@ -456,10 +456,6 @@ class CameraController extends ValueNotifier<CameraValue> {
       case 'rtmp_stopped':
         value = value.copyWith(isStreamingVideoRtmp: false, event: uniEvent);
         break;
-      case 'rotation_update':
-        value = value.copyWith(
-            previewQuarterTurns: int.parse(errorDescription!), event: uniEvent);
-        break;
       default:
         value = value.copyWith(event: uniEvent);
         break;
@@ -907,6 +903,12 @@ class CameraController extends ValueNotifier<CameraValue> {
         'pauseVideoStreaming was called when no video is streaming.',
       );
     }
+    if(!Platform.isIOS){
+      throw CameraException(
+        'Currently only supports Ios platform',
+        'Please use on Ios platform',
+      );
+    }
     try {
       value = value.copyWith(isStreamingPaused: true);
       await _channel.invokeMethod<void>(
@@ -932,6 +934,12 @@ class CameraController extends ValueNotifier<CameraValue> {
       throw CameraException(
         'No video is recording',
         'resumeVideoStreaming was called when no video is streaming.',
+      );
+    }
+    if(!Platform.isIOS){
+      throw CameraException(
+        'Currently only supports Ios platform',
+        'Please use on Ios platform',
       );
     }
     try {
