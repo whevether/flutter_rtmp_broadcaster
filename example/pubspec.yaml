@@ -1,6 +1,6 @@
 name: rtmp_streaming_example
 description: Demonstrates how to use the rtmp_streaming plugin.
-
+version: 0.0.1
 publish_to: 'none'
 
 environment:
@@ -15,7 +15,7 @@ dependencies:
 
   path_provider: ^2.1.5
   cupertino_icons: ^1.0.8
-  wakelock_plus: ^1.3.2
+  wakelock_plus: ^1.4.0
 
 dev_dependencies:
   flutter_test:
