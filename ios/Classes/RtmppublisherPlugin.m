@@ -5,7 +5,7 @@
 // Support project import fallback if the generated compatibility header
 // is not copied when this plugin is created as a library.
 // https://forums.swift.org/t/swift-static-libraries-dont-copy-generated-objective-c-header/19816
-#import "rtmp_streaming-Swift.h"
+//#import "rtmp_streaming-Swift.h"
 #endif
 
 #import <AVFoundation/AVFoundation.h>
@@ -705,7 +705,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (void)pauseVideoStreaming {
     _isStreamingPaused = YES;
-    [_rtmpStream pauseVideoStreaming];
+    [_rtmpStream pauseVideoStreaming]; // Swift 内部已封装 async/await
 }
 
 - (void)resumeVideoStreaming {
@@ -722,31 +722,33 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (void)startVideoStreamingAtUrl:(NSString *)url bitrate:(NSNumber *)bitrate result:(FlutterResult)result {
     if (_isStreaming) {
         _eventSink(@{@"event" : @"error", @"errorDescription" : @"Video is already streaming!"});
+        return;
     }
-    if (!_isStreaming) {
-        if (![self setupWriterForUrl:url ]) {
-            _eventSink(@{@"event" : @"error", @"errorDescription" : @"Setup Writer Failed"});
-            return;
-        }
-        
-        _rtmpStream = [[FlutterRTMPStreaming alloc] initWithSink: _eventSink];
-        if (bitrate == nil || bitrate == 0) {
-            bitrate = [NSNumber numberWithInt:160 * 1000];
-        }
-        
-        // TODO: FIX
-        // [self newAudioSample:sampleBuffer];
-        [self setStreamingSessionPreset:_streamingPreset];
-        
-        [_rtmpStream openWithUrl:url width: _streamingSize.width height: _streamingSize.height bitrate: bitrate.integerValue];
-        _isStreaming = YES;
-        _isStreamingPaused = NO;
-        _videoTimeOffset = CMTimeMake(0, 1);
-        _audioTimeOffset = CMTimeMake(0, 1);
-        _videoIsDisconnected = NO;
-        _audioIsDisconnected = NO;
-        result(nil);
+    if (![self setupWriterForUrl:url]) {
+        _eventSink(@{@"event" : @"error", @"errorDescription" : @"Setup Writer Failed"});
+        return;
     }
+
+    _rtmpStream = [[FlutterRTMPStreaming alloc] initWithSink:_eventSink];
+    if (bitrate == nil || bitrate == 0) {
+        bitrate = [NSNumber numberWithInt:160 * 1000];
+    }
+
+    [self setStreamingSessionPreset:_streamingPreset];
+
+    // 调用 Swift 封装的桥接方法（内部会执行 async/await + retries）
+    [_rtmpStream openWithUrl:url
+                       width:_streamingSize.width
+                      height:_streamingSize.height
+                     bitrate:bitrate.integerValue];
+
+    _isStreaming = YES;
+    _isStreamingPaused = NO;
+    _videoTimeOffset = CMTimeMake(0, 1);
+    _audioTimeOffset = CMTimeMake(0, 1);
+    _videoIsDisconnected = NO;
+    _audioIsDisconnected = NO;
+    result(nil);
 }
 
 
@@ -824,12 +826,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         [NSError errorWithDomain:NSCocoaErrorDomain
                             code:NSURLErrorResourceUnavailable
                         userInfo:@{NSLocalizedDescriptionKey : @"Video is not streaming!"}];
-        result(getFlutterError(error));
+        result([FlutterError errorWithCode:@"Error"
+                                   message:error.localizedDescription
+                                   details:error.domain]);
     } else {
-        if (_isStreaming) {
-            _isStreaming = NO;
-            [_rtmpStream close];
-        }
+        _isStreaming = NO;
+        [_rtmpStream close]; // Swift 内部已封装 async/await
         result(nil);
     }
 }

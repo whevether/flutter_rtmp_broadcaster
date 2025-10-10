@@ -1,0 +1,185 @@
+import Flutter
+import UIKit
+import AVFoundation
+import Accelerate
+import CoreMotion
+import HaishinKit
+import os
+import ReplayKit
+import VideoToolbox
+
+@objc
+public class FlutterRTMPStreaming : NSObject {
+    private let connection = RTMPConnection()
+    private var stream: RTMPStream!
+    private let mixer = MediaMixer()
+    private var url: String? = nil
+    private var name: String? = nil
+    private let eventSink: FlutterEventSink
+    private let bitrateStrategy = MyBitrateStrategy()
+
+    @objc
+    public init(sink: @escaping FlutterEventSink) {
+        eventSink = sink
+    }
+
+    
+    public func open(url: String, width: Int, height: Int, bitrate: Int) {
+        stream = RTMPStream(connection: connection)
+        mixer.addOutput(stream)
+
+        // 配置视频参数
+        Task {
+            do {
+                try await mixer.attachVideo(AVCaptureDevice.default(.builtInWideAngleCamera,
+                                                                    for: .video,
+                                                                    position: .back))
+                try await mixer.attachAudio(AVCaptureDevice.default(for: .audio))
+            } catch {
+                print("Attach error: \(error)")
+            }
+        }
+
+        stream.videoSettings = VideoCodecSettings(
+            videoSize: CGSize(width: width, height: height),
+            bitRate: bitrate,
+            profileLevel: kVTProfileLevel_H264_Baseline_AutoLevel as String,
+            scalingMode: .trim,
+            bitRateMode: .average,
+            maxKeyFrameIntervalDuration: 2,
+            allowFrameReordering: nil,
+            isHardwareEncoderEnabled: true
+        )
+        stream.frameRate = 30.0
+
+        let uri = URL(string: url)
+        self.name = uri?.lastPathComponent
+        var bits = url.components(separatedBy: "/")
+        bits.removeLast()
+        self.url = bits.joined(separator: "/")
+
+        // 使用带 retries 的连接逻辑
+        connectAndPublish(url: self.url ?? "", name: self.name, maxRetries: 3)
+    }
+     // ObjC 桥接方法（供 RtmppublisherPlugin.m 调用）
+    @MainActor
+    @objc
+    public func openWithUrl(_ url: String, width: CGFloat, height: CGFloat, bitrate: Int) {
+        Task {
+            await self.open(url: url, width: Int(width), height: Int(height), bitrate: bitrate)
+        }
+    }
+
+    // MARK: - 重试逻辑
+    @MainActor
+    private func connectAndPublish(url: String, name: String?, maxRetries: Int = 3) {
+        Task {
+            var attempt = 0
+            while attempt <= maxRetries {
+                do {
+                    try await connection.connect(url)
+                    try await stream.publish(name)
+                    await stream.setBitrateStrategy(bitrateStrategy)
+                    eventSink(["event": "rtmp_connected"])
+                    return
+                } catch {
+                    if attempt >= maxRetries {
+                        eventSink(["event": "error",
+                                   "errorDescription": "RTMP connect failed after \(attempt) retries: \(error)"])
+                        return
+                    }
+                    attempt += 1
+                    let delay = UInt64(pow(2.0, Double(attempt)) * 1_000_000_000) // 纳秒
+                    eventSink(["event": "rtmp_retry",
+                               "errorDescription": "retry \(attempt) after error: \(error)"])
+                    try? await Task.sleep(nanoseconds: delay)
+                }
+            }
+        }
+    }
+
+    @objc
+    public func pauseVideoStreaming() {
+        Task { await stream.pause() }
+    }
+
+    @objc
+    public func resumeVideoStreaming() {
+        Task { await stream.resume() }
+    }
+
+    @objc
+    public func isPaused() -> Bool {
+        return stream.isPaused
+    }
+
+    @objc
+    public func getStreamStatistics() -> NSDictionary {
+        let ret: NSDictionary = [
+            "paused": isPaused(),
+            "bitrate": stream.videoSettings.bitRate,
+            "width": stream.videoSettings.videoSize.width,
+            "height": stream.videoSettings.videoSize.height,
+            "fps": stream.currentFPS,
+            "orientation": stream.videoOrientation.rawValue
+        ]
+        return ret
+    }
+
+    @objc
+    public func addVideoData(buffer: CMSampleBuffer) {
+        if let description = CMSampleBufferGetFormatDescription(buffer) {
+            let dimensions = CMVideoFormatDescriptionGetDimensions(description)
+            stream.videoSettings = VideoCodecSettings(
+                videoSize: CGSize(width: Int(dimensions.width), height: Int(dimensions.height)),
+                bitRate: 1200 * 1024,
+                profileLevel: kVTProfileLevel_H264_Baseline_AutoLevel as String,
+                scalingMode: .trim,
+                bitRateMode: .average,
+                maxKeyFrameIntervalDuration: 2,
+                allowFrameReordering: nil,
+                isHardwareEncoderEnabled: true
+            )
+            stream.frameRate = 24
+        }
+        mixer.append(buffer)
+    }
+
+    @objc
+    public func addAudioData(buffer: CMSampleBuffer) {
+        mixer.append(buffer)
+    }
+
+    @objc
+    public func close() {
+        Task { await connection.close() }
+    }
+}
+
+// MARK: - Bitrate Strategy
+final actor MyBitrateStrategy: HKStreamBitRateStrategy {
+    let minBitrate: Int = 300 * 1024
+    let maxBitrate: Int = 2500 * 1024
+    let incrementBitrate: Int = 512 * 1024
+
+    func adjustBitrate(_ event: NetworkMonitorEvent, stream: some HKStream) async {
+        switch event {
+        case .publishSufficientBWOccured:
+            let current = await stream.getVideoBitRate()
+            var newBitrate = current + incrementBitrate
+            if newBitrate > maxBitrate { newBitrate = maxBitrate }
+            print("publishSufficientBWOccured update: \(current) -> \(newBitrate)")
+            await stream.setVideoBitRate(newBitrate)
+
+        case .publishInsufficientBWOccured:
+            let current = await stream.getVideoBitRate()
+            var newBitrate = current / 2
+            if newBitrate < minBitrate { newBitrate = minBitrate }
+            print("publishInsufficientBWOccured update: \(current) -> \(newBitrate)")
+            await stream.setVideoBitRate(newBitrate)
+
+        default:
+            break
+        }
+    }
+}
