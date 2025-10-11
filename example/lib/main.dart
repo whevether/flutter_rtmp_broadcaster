@@ -47,7 +47,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   bool switchCamera = false; // 为false 表示使用前置摄像头，为true表示使用后置摄像头
   bool isFlashLight = false; // false表示关闭闪光灯，true表示打开闪光灯
   TextEditingController _textFieldController =
-      TextEditingController(text: "rtmp://192.168.1.20/live/show1");
+      TextEditingController(text: "rtmp://grafana.imchat.love/live/show1");
 
   bool get isStreaming => controller?.value.isStreamingVideoRtmp ?? false;
   bool isVisible = true;
