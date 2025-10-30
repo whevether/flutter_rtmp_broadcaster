@@ -88,12 +88,6 @@ class MethodCallHandlerImplNew(
                 getCameraView()?.takePicture(call.argument("path")!!, result)
             }
 
-            "prepareForVideoRecording" -> {
-                Log.i("Stuff", "prepareForVideoRecording")
-                // This optimization is not required for Android.
-                result.success(null)
-            }
-
             "startVideoRecording" -> {
                 Log.i("Stuff", "startVideoRecording")
                 getCameraView()?.startVideoRecording(call.argument("filePath")!!, result)
@@ -116,16 +110,6 @@ class MethodCallHandlerImplNew(
                     call.argument("bitrate"),
                     result
                 )
-            }
-
-            "pauseVideoStreaming" -> {
-                Log.i("Stuff", "pauseVideoStreaming")
-                getCameraView()?.pauseVideoStreaming(result)
-            }
-
-            "resumeVideoStreaming" -> {
-                Log.i("Stuff", "resumeVideoStreaming")
-                getCameraView()?.resumeVideoStreaming(result)
             }
 
             "stopRecordingOrStreaming" -> {
@@ -151,26 +135,6 @@ class MethodCallHandlerImplNew(
             "resumeVideoRecording" -> {
                 Log.i("Stuff", "resumeVideoRecording")
                 getCameraView()?.resumeVideoRecording(result)
-            }
-
-            "startImageStream" -> {
-                Log.i("Stuff", "startImageStream")
-                try {
-                    getCameraView()?.startPreviewWithImageStream(result)
-                    result.success(null)
-                } catch (e: Exception) {
-                    handleException(e, result)
-                }
-            }
-
-            "stopImageStream" -> {
-                Log.i("Stuff", "startImageStream")
-                try {
-                    getCameraView()?.startPreview()
-                    result.success(null)
-                } catch (e: Exception) {
-                    handleException(e, result)
-                }
             }
 
             "getStreamStatistics" -> {

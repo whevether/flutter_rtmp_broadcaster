@@ -538,9 +538,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
       if (isRecordingVideo) {
         await controller!.pauseVideoRecording();
       }
-      if (isStreaming && Platform.isIOS) {
-        await controller!.pauseVideoStreaming();
-      }
     } on CameraException catch (e) {
       _showCameraException(e);
       rethrow;
@@ -553,9 +550,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     try {
       if (isRecordingVideo) {
         await controller!.resumeVideoRecording();
-      }
-      if (isStreaming && Platform.isIOS) {
-        await controller!.resumeVideoStreaming();
       }
     } on CameraException catch (e) {
       _showCameraException(e);

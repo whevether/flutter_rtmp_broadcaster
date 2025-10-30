@@ -263,16 +263,6 @@ class CameraNativeView(
         }
     }
 
-    fun pauseVideoStreaming(result: MethodChannel.Result) {
-        // TODO: Implement pause video streaming
-        result.error("pauseVideoStreaming", "安卓暂时不支持暂停播放", null)
-    }
-
-    fun resumeVideoStreaming(result: MethodChannel.Result) {
-        // TODO: Implement resume video streaming
-        result.error("resumeVideoStreaming", "安卓暂时不支持恢复播放", null)
-    }
-
     //启用低光模式
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun onFlashLight(result: MethodChannel.Result) {
@@ -443,11 +433,6 @@ class CameraNativeView(
             return
         }
 
-    }
-
-    fun startPreviewWithImageStream(result: MethodChannel.Result) {
-        // TODO: Implement start preview with image stream
-        result.error("startPreviewWithImageStream", "安卓暂时不支持使用图像流开始预览", null)
     }
 
     fun startPreview(cameraNameArg: String? = null) {

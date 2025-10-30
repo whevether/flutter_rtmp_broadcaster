@@ -31,8 +31,6 @@ Using this plugin is as easy as using the original [camera plugin](https://pub.d
 |----------|-------------|
 | `startVideoStreaming(String url, {int bitrate = 1200 * 1024, bool? androidUseOpenGL})` | Initiates video streaming to an RTMP endpoint. |
 | `startVideoRecordingAndStreaming(String filePath, String url, {int bitrate = 1200 * 1024, bool? androidUseOpenGL})` | Initiates video streaming to an RTMP endpoint while simultaneously saving a high-quality version to a local file. |
-| `pauseVideoStreaming()` | Pauses an ongoing video stream. Android is not implemented. Because the Android library does not have a pause method, Android needs to stop streaming before restarting it|
-| `resumeVideoStreaming()` | Resumes a paused video stream. Android is not implemented. Because the Android library does not have a pause method, Android needs to stop streaming before restarting it|
 | `stopEverything()` | Halts ongoing video streaming and recording processes. |
 | ... | ... |
 

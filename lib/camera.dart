@@ -388,20 +388,6 @@ class CameraController extends ValueNotifier<CameraValue> {
     return _creatingCompleter!.future;
   }
 
-  /// Prepare the capture session for video recording.
-  ///
-  /// Use of this method is optional, but it may be called for performance
-  /// reasons on iOS.
-  ///
-  /// Preparing audio can cause a minor delay in the CameraPreview view on iOS.
-  /// If video recording is intended, calling this early eliminates this delay
-  /// that would otherwise be experienced when video recording is started.
-  /// This operation is a no-op on Android.
-  ///
-  /// Throws a [CameraException] if the prepare fails.
-  Future<void> prepareForVideoRecording() async {
-    await _channel.invokeMethod<void>('prepareForVideoRecording');
-  }
 
   /// Prepare the capture session for video streaming.
   ///
@@ -495,90 +481,6 @@ class CameraController extends ValueNotifier<CameraValue> {
       value = value.copyWith(isTakingPicture: false);
       throw CameraException(e.code, e.message);
     }
-  }
-
-  /// Start streaming images from platform camera.
-  ///
-  /// Settings for capturing images on iOS and Android is set to always use the
-  /// latest image available from the camera and will drop all other images.
-  ///
-  /// When running continuously with [CameraPreview] widget, this function runs
-  /// best with [ResolutionPreset.low]. Running on [ResolutionPreset.high] can
-  /// have significant frame rate drops for [CameraPreview] on lower end
-  /// devices.
-  ///
-  /// Throws a [CameraException] if image streaming or video recording has
-  /// already started.
-  // TODO(bmparr): Add settings for resolution and fps.
-  Future<void> startImageStream(LatestImageCallback onAvailable) async {
-    if (!value.isInitialized! || _isDisposed) {
-      throw CameraException(
-        'Uninitialized CameraController',
-        'startImageStream was called on uninitialized CameraController.',
-      );
-    }
-    if (value.isRecordingVideo!) {
-      throw CameraException(
-        'A video recording is already started.',
-        'startImageStream was called while a video is being recorded.',
-      );
-    }
-    if (value.isStreamingVideoRtmp!) {
-      throw CameraException(
-        'A video recording is already started.',
-        'startImageStream was called while a video is being recorded.',
-      );
-    }
-    if (value.isStreamingImages!) {
-      throw CameraException(
-        'A camera has started streaming images.',
-        'startImageStream was called while a camera was streaming images.',
-      );
-    }
-
-    try {
-      await _channel.invokeMethod<void>('startImageStream');
-      value = value.copyWith(isStreamingImages: true);
-    } on PlatformException catch (e) {
-      throw CameraException(e.code, e.message);
-    }
-    const EventChannel cameraEventChannel =
-        EventChannel('plugins.flutter.io/rtmp_publisher/imageStream');
-    _imageStreamSubscription =
-        cameraEventChannel.receiveBroadcastStream().listen(
-      (dynamic imageData) {
-        onAvailable(CameraImage._fromPlatformData(imageData));
-      },
-    );
-  }
-
-  /// Stop streaming images from platform camera.
-  ///
-  /// Throws a [CameraException] if image streaming was not started or video
-  /// recording was started.
-  Future<void> stopImageStream() async {
-    if (!value.isInitialized! || _isDisposed) {
-      throw CameraException(
-        'Uninitialized CameraController',
-        'stopImageStream was called on uninitialized CameraController.',
-      );
-    }
-    if (!value.isStreamingImages!) {
-      throw CameraException(
-        'No camera is streaming images',
-        'stopImageStream was called when no camera is streaming images.',
-      );
-    }
-
-    try {
-      value = value.copyWith(isStreamingImages: false);
-      await _channel.invokeMethod<void>('stopImageStream');
-    } on PlatformException catch (e) {
-      throw CameraException(e.code, e.message);
-    }
-
-    await _imageStreamSubscription!.cancel();
-    _imageStreamSubscription = null;
   }
 
   /// Get statistics about the rtmp stream.
@@ -887,71 +789,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
-  /// Pause video recording.
-  ///
-  /// This feature is only available on iOS and Android sdk 24+.
-  Future<void> pauseVideoStreaming() async {
-    if (!value.isInitialized! || _isDisposed) {
-      throw CameraException(
-        'Uninitialized CameraController',
-        'pauseVideoStreaming was called on uninitialized CameraController',
-      );
-    }
-    if (!value.isStreamingVideoRtmp!) {
-      throw CameraException(
-        'No video is recording',
-        'pauseVideoStreaming was called when no video is streaming.',
-      );
-    }
-    if(!Platform.isIOS){
-      throw CameraException(
-        'Currently only supports Ios platform',
-        'Please use on Ios platform',
-      );
-    }
-    try {
-      value = value.copyWith(isStreamingPaused: true);
-      await _channel.invokeMethod<void>(
-        'pauseVideoStreaming',
-        <String, dynamic>{'textureId': _textureId},
-      );
-    } on PlatformException catch (e) {
-      throw CameraException(e.code, e.message);
-    }
-  }
 
-  /// Resume video streaming after pausing.
-  ///
-  /// This feature is only available on iOS and Android sdk 24+.
-  Future<void> resumeVideoStreaming() async {
-    if (!value.isInitialized! || _isDisposed) {
-      throw CameraException(
-        'Uninitialized CameraController',
-        'resumeVideoStreaming was called on uninitialized CameraController',
-      );
-    }
-    if (!value.isStreamingVideoRtmp!) {
-      throw CameraException(
-        'No video is recording',
-        'resumeVideoStreaming was called when no video is streaming.',
-      );
-    }
-    if(!Platform.isIOS){
-      throw CameraException(
-        'Currently only supports Ios platform',
-        'Please use on Ios platform',
-      );
-    }
-    try {
-      value = value.copyWith(isStreamingPaused: false);
-      await _channel.invokeMethod<void>(
-        'resumeVideoStreaming',
-        <String, dynamic>{'textureId': _textureId},
-      );
-    } on PlatformException catch (e) {
-      throw CameraException(e.code, e.message);
-    }
-  }
   /// switch Camera[cameraId`].
   ///
   /// This switch Camera to the camera with the given [cameraId].
