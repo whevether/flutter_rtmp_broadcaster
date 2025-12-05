@@ -36,3 +36,4 @@ doc/api/
 !.idea/vcs.xml
 !rtmp_streaming.iml
 fastlane/report.xml
+*pubspec.lock
