@@ -110,6 +110,14 @@ class CameraExampleHomeState extends State<CameraExampleHome>
       key: _scaffoldKey,
       appBar: AppBar(
         title: const Text('Camera example'),
+        actions: Platform.isAndroid ? [
+          ElevatedButton(onPressed: isControllerInitialized ? ()async{
+            await controller.setFilter(0);
+          } : null, child: Text("set filter")),
+          ElevatedButton(onPressed: isControllerInitialized ? ()async{
+            await controller.removeFilter(0);
+          } : null, child: Text("remove filter")),
+        ] : null,
       ),
       body: Column(
         children: <Widget>[
@@ -134,6 +142,12 @@ class CameraExampleHomeState extends State<CameraExampleHome>
           )
         ],
       ),
+       floatingActionButton: FloatingActionButton(
+          onPressed: isControllerInitialized  ? () async{
+            await controller.dispose();
+          } : null,
+          child: Icon(Icons.close),
+        ),
     );
   }
 
@@ -179,7 +193,7 @@ class CameraExampleHomeState extends State<CameraExampleHome>
   Widget _captureControlRowWidget() {
     if (!isControllerInitialized) return Container();
 
-    return Wrap(
+    return ListView(
       children: <Widget>[
         // Only Android has implemented it
         if (Platform.isAndroid)
@@ -196,7 +210,7 @@ class CameraExampleHomeState extends State<CameraExampleHome>
               style: TextStyle(color: Colors.white),
             ),
             onPressed:
-                isControllerInitialized ? onTakePictureButtonPressed : null,
+                (isControllerInitialized && (isRecordingVideo || isStreaming)) ? onTakePictureButtonPressed : null,
           ),
         SizedBox(
           width: 5,
@@ -298,6 +312,7 @@ class CameraExampleHomeState extends State<CameraExampleHome>
                 }
               : null,
         ),
+        _cameraTogglesRowWidget(),
         const SizedBox(
           width: 5,
         ),
@@ -324,16 +339,17 @@ class CameraExampleHomeState extends State<CameraExampleHome>
           onChanged: (bool value) async {
             if (isControllerInitialized &&
                 _cameraDesc?.lensDirection == CameraLensDirection.back) {
-              await controller.switchFlashLight(value);
-              setState(() {
+                   setState(() {
                 isFlashLight = value;
               });
+              await controller.switchFlashLight(value);
+             
             } else {
               showInSnackBar('Please select a camera first.');
             }
           },
         ),
-        _cameraTogglesRowWidget(),
+        
         _thumbnailWidget(),
       ],
     );
@@ -346,11 +362,11 @@ class CameraExampleHomeState extends State<CameraExampleHome>
       return;
     }
     try {
-      await controller.switchCamera(cld.name!);
-      await WakelockPlus.enable();
-      setState(() {
+       setState(() {
         _cameraDesc = cld;
       });
+      await controller.switchCamera(cld.name!);
+      await WakelockPlus.enable();
     } on CameraException catch (e) {
       _showCameraException(e);
       return;

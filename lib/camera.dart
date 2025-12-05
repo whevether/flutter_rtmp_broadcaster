@@ -472,7 +472,56 @@ class CameraController extends ValueNotifier<CameraValue> {
       throw CameraException(e.code, e.message);
     }
   }
-
+  /// The set filter
+  ///
+  /// Throws a [CameraException] if the capture fails.
+  Future<void> setFilter(int type,{String? filePath}) async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController.',
+        'setFilter was called on uninitialized CameraController',
+      );
+    }
+    if (!Platform.isAndroid) {
+      throw CameraException(
+        'Unsupported platforms.',
+        'setFilter supported android.',
+      );
+    }
+    try {
+      await _channel.invokeMethod<void>(
+        'setFilter',
+        <String, dynamic>{ 'type': type,'filePath': filePath},
+      );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+  /// The remove filter
+  ///
+  /// Throws a [CameraException] if the capture fails.
+  Future<void> removeFilter(int type) async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController.',
+        'removeFilter was called on uninitialized CameraController',
+      );
+    }
+    if (!Platform.isAndroid) {
+      throw CameraException(
+        'Unsupported platforms.',
+        'removeFilter supported android.',
+      );
+    }
+    try {
+      await _channel.invokeMethod<void>(
+        'removeFilter',
+        <String, dynamic>{ 'type': type},
+      );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
   /// Get statistics about the rtmp stream.
   ///
   /// Throws a [CameraException] if image streaming was not started.

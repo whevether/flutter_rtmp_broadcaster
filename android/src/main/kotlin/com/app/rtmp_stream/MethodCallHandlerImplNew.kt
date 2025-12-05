@@ -149,7 +149,7 @@ class MethodCallHandlerImplNew(
             }
             "switchCamera" -> {
                 Log.i("Stuff", "switchCamera")
-                getCameraView()?.switchCamera(call.argument("cameraId"),result)
+                getCameraView()?.switchCamera(call.argument("cameraName"),result)
             }
             "switchAudio" -> {
                 Log.i("Stuff", "switchAudio")
@@ -158,6 +158,14 @@ class MethodCallHandlerImplNew(
             "switchFlashLight" -> {
                 Log.i("Stuff", "switchFlashLight")
                 getCameraView()?.switchFlashLight(call.argument("isEnable"),result)
+            }
+            "setFilter" -> {
+              Log.i("Stuff", "setFilter")
+              getCameraView()?.setFilter(call.argument("type"),call.argument("filePath"),result)
+            }
+            "removeFilter" -> {
+              Log.i("Stuff", "removeFilter")
+              getCameraView()?.removeFilter(call.argument("type"),result)
             }
             "dispose" -> {
                 Log.i("Stuff", "dispose")

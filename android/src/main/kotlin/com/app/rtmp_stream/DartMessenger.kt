@@ -7,15 +7,15 @@ import io.flutter.plugin.common.EventChannel.EventSink
 import java.util.*
 
 
-class DartMessenger(messenger: BinaryMessenger, eventChannelId: Long) {
+class DartMessenger(messenger: BinaryMessenger, eventChannelId: Int) {
     private var eventSink: EventSink? = null
 
     enum class EventType {
-        ERROR, CAMERA_CLOSING, RTMP_STOPPED, RTMP_RETRY, SUCCESS
+        ERROR, CAMERA_CLOSING, RTMP_STOPPED, RTMP_RETRY, SUCCESS,WAIT
     }
 
     fun sendCameraClosingEvent() {
-        send(EventType.CAMERA_CLOSING, null)
+        send(EventType.CAMERA_CLOSING, "close connection")
     }
 
     fun send(eventType: EventType, description: String?) {
