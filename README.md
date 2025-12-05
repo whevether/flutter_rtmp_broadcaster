@@ -61,6 +61,18 @@
 - 🖼️ 设置直播屏幕宽高：`setScreenSettings`  
 
 ---
+### 🤖 Android 平台独有方法
+Android 平台在直播推流时提供了额外的功能：
+
+- 📸 直播时截图：`takePicture`  
+- ⏸️ 暂停录制：`pauseVideoRecording`  
+- ▶️ 恢复录制：`resumeVideoRecording`  
+- 🎨 设置滤镜：`setFilter`  
+  > 滤镜 `type` 值对应的滤镜请查看源码：  
+  > [CameraNativeView.kt](https://github.com/whevether/flutter_rtmp_broadcaster/blob/main/android/src/main/kotlin/com/app/rtmp_stream/CameraNativeView.kt)  
+- ❌ 移除滤镜：`removeFilter`  
+
+---
 
 ## 🚀 总结
 `rtmp_stream 1.0.0` 正式版为 Flutter 开发者提供了一个跨平台、现代化的 RTMP 推流与视频录制插件，解决了现有生态的不足。  
