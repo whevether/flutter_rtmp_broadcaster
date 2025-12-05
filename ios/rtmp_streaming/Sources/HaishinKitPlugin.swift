@@ -566,13 +566,13 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
           details: nil
         ))
       }
-    case "onSwitchAudio":
+    case "switchAudio":
       do{
         guard
           let arguments = call.arguments as? [String: Any?],
           let isEnable = arguments["isEnable"] as? Bool else {
           result(FlutterError(
-            code: "onSwitchAudioError",
+            code: "switchAudioError",
             message: "isEnable empty",
             details: nil
           ))
@@ -581,7 +581,7 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
         guard
           let newMixer = mixer else{
           result(FlutterError(
-            code: "onSwitchAudioError",
+            code: "switchAudioError",
             message: "mixer empty",
             details: nil
           ))
@@ -593,7 +593,7 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
         }
       }catch{
         result(FlutterError(
-          code: "onSwitchAudioError",
+          code: "switchAudioError",
           message: "catch error",
           details: nil
         ))
