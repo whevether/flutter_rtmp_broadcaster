@@ -1,33 +1,32 @@
 ## 0.0.1
-1. 完全重构 android 版本。升级gradle与rtmp 推流插件com.github.pedroSG94.RootEncoder到最新版本
-2. 安卓版本增加滤镜
-3. 安卓版本过时方法，以及切换摄像头导致崩溃改善
-4. 安卓版本录直播无法录制问题改善。
-5. 增加安卓弱光环境设置开关。
+1. Completely refactored the Android version. Upgraded Gradle and the RTMP streaming plugin `com.github.pedroSG94.RootEncoder` to the latest version.  
+2. Added filters for the Android version.  
+3. Improved deprecated methods and fixed crashes caused by camera switching on Android.  
+4. Fixed the issue where live recording could not be captured on Android.  
+5. Added a toggle for low-light environment settings on Android.  
 
 ## 0.0.2
-1. 移除多余的安卓包。减少打包体积
+1. Removed redundant Android packages to reduce build size.  
 
 ## 0.0.3
-1. 升级 ios HaishinKit 到1.9.9
-2. 重写部分过时方法。
-
+1. Upgraded iOS HaishinKit to version 1.9.9.  
+2. Rewrote some deprecated methods.  
 
 ## 0.0.4
-1. 修复安卓切换崩溃错误。并增加切换摄像头。声音开关。 优化示例，
-2. 清理多余用不到方法
+1. Fixed Android crash errors when switching cameras. Added camera switching and audio toggle features. Optimized the example project.  
+2. Cleaned up unused methods.  
 
 ## 0.0.5
-1. 优化安卓示例
-2. 安卓增加暂停/恢复录制
+1. Optimized Android example project.  
+2. Added pause/resume recording functionality for Android.  
+
 ## 0.0.6
-1. ios HaishinKit更新到2.0.0，预览版本,不是正式版本。可能有bug
+1. Updated iOS HaishinKit to version 2.0.0 (preview version, not stable, may contain bugs).  
 
 ## 1.0.0
-1. ios HaishinKit更新到2.0.0，正式版本,
-2. iOS代码完全重构。并通过swift包来管理依赖
-3. ios 增加众多方法
-4. 示例更新。camera.dart方法更新。移除多余字段以及重复方法。
-5. android 更新gradle到9.0，rtmp包更新到最新版本, 返回值与ios统一，并处理销毁方法
-6. android 增加滤镜功能。
-
+1. Updated iOS HaishinKit to version 2.0.0 (stable release).  
+2. Completely refactored iOS code, now managing dependencies via Swift Package Manager.  
+3. Added numerous new methods for iOS.  
+4. Updated examples: revised `camera.dart`, removed redundant fields and duplicate methods.  
+5. Upgraded Android Gradle to 9.0, updated RTMP package to the latest version, unified return values with iOS, and improved disposal methods.  
+6. Added filter functionality for Android.  
