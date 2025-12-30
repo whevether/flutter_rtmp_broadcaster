@@ -50,5 +50,5 @@ android {
 dependencies {
     implementation 'androidx.annotation:annotation:1.9.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.github.pedroSG94.RootEncoder:library:2.6.6'
+    implementation 'com.github.pedroSG94.RootEncoder:library:2.6.7'
 }

@@ -30,3 +30,6 @@
 4. Updated examples: revised `camera.dart`, removed redundant fields and duplicate methods.  
 5. Upgraded Android Gradle to 9.0, updated RTMP package to the latest version, unified return values with iOS, and improved disposal methods.  
 6. Added filter functionality for Android.  
+
+## 1.0.1
+1. update package
