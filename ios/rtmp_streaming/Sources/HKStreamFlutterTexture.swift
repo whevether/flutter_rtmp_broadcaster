@@ -7,6 +7,9 @@ import FlutterMacOS
 import Foundation
 import HaishinKit
 import AVFoundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 final class HKStreamFlutterTexture: NSObject, FlutterTexture {
   private static let defaultOptions: [String: Any] = [
@@ -107,6 +110,28 @@ final class HKStreamFlutterTexture: NSObject, FlutterTexture {
     )
     
     return pixelBuffer.map { Unmanaged<CVPixelBuffer>.passRetained($0) }
+  }
+  
+  // 获取当前帧的图片
+  func getCurrentImage() -> UIImage? {
+    var buffer: CMSampleBuffer?
+    
+    queue.sync {
+      buffer = _currentSampleBuffer
+    }
+    
+    guard let currentSampleBuffer = buffer,
+          let imageBuffer = CMSampleBufferGetImageBuffer(currentSampleBuffer) else {
+      return nil
+    }
+    
+    let ciImage = CIImage(cvPixelBuffer: imageBuffer)
+    
+    guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+      return nil
+    }
+    
+    return UIImage(cgImage: cgImage)
   }
 }
 

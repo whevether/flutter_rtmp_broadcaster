@@ -454,12 +454,6 @@ class CameraController extends ValueNotifier<CameraValue> {
         'takePicture was called before the previous capture returned.',
       );
     }
-    if (!Platform.isAndroid) {
-      throw CameraException(
-        'Unsupported platforms.',
-        'takePicture supported android.',
-      );
-    }
     try {
       value = value.copyWith(isTakingPicture: true);
       await _channel.invokeMethod<void>(

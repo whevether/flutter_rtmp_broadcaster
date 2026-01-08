@@ -339,6 +339,35 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
       return nil
     } catch {  return FlutterError(code: "offFlashLight", message: "catch error", details: nil) }
   }
+  // 拍照
+  private func takePicture(filePath: String) async -> FlutterError? {
+    guard let texture = texture else {
+      return FlutterError(code: "takePictureError", message: "Texture not initialized", details: nil)
+    }
+    
+    guard let image = texture.getCurrentImage() else {
+      return FlutterError(code: "takePictureError", message: "Failed to capture image", details: nil)
+    }
+    
+    guard let imageData = image.jpegData(compressionQuality: 1.0) else {
+      return FlutterError(code: "takePictureError", message: "Failed to convert image to JPEG", details: nil)
+    }
+    
+    do {
+      let url = URL(fileURLWithPath: filePath)
+      let directory = url.deletingLastPathComponent()
+      
+      // 确保目录存在
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
+      
+      // 保存图片
+      try imageData.write(to: url)
+      return nil
+    } catch {
+      return FlutterError(code: "IOError", message: "Failed saving image: \(error.localizedDescription)", details: nil)
+    }
+  }
+  
   //获取直播流信息
   private func getStreamStatistics() async -> [String: Any?] {
     do{
@@ -443,7 +472,27 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
       }
       
     case "takePicture":
-      result(FlutterError(code: "takePictureError", message: "takePicture unrealized", details: nil))
+      guard
+        let arguments = call.arguments as? [String: Any?],
+        let filePath = arguments["path"] as? String else {
+        result(FlutterError(code: "takePictureError", message: "Must specify a filePath.", details: nil))
+        return
+      }
+      
+      let fileManager = FileManager.default
+      if fileManager.fileExists(atPath: filePath) {
+        result(FlutterError(
+          code: "fileExists",
+          message: "File at path '\(filePath)' already exists. Cannot overwrite.",
+          details: nil
+        ))
+        return
+      }
+      
+      Task {
+        let error = await takePicture(filePath: filePath)
+        result(error)
+      }
     case "pauseVideoRecording":
       result(FlutterError(code: "pauseVideoRecordingError", message: "pauseVideoRecording unrealized", details: nil))
     case "resumeVideoRecording":
