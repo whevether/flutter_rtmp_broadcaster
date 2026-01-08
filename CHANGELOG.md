@@ -33,3 +33,4 @@
 
 ## 1.0.1
 1. update package
+2. add - 📸 Take snapshot during streaming: `takePicture`  

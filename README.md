@@ -40,6 +40,7 @@ Therefore, the goal of `rtmp_stream` is to deliver a **modern, stable, and maint
 - 💡 Toggle flashlight on/off: `switchFlashLight`  
 - 📊 Get stream statistics: `getStreamStatistics`  
 - 🗑️ Dispose plugin: `dispose`  
+- 📸 Take snapshot during streaming: `takePicture`  
 
 ---
 
@@ -65,7 +66,6 @@ Since HaishinKit supports not only streaming but also **RTMP playback**, iOS pro
 ### 🤖 Android Exclusive Methods
 Android provides additional features during live streaming:
 
-- 📸 Take snapshot during streaming: `takePicture`  
 - ⏸️ Pause recording: `pauseVideoRecording`  
 - ▶️ Resume recording: `resumeVideoRecording`  
 - 🎨 Apply filter: `setFilter`  
