@@ -94,6 +94,9 @@ class CameraNativeView(
     private val vBitrate = 1200 * 1000
     private val bitrateAdapter: BitrateAdapter
   val spriteGestureController = SpriteGestureController()
+    /** 当前已设置的滤镜实例，removeFilter 必须用同一实例才能生效 */
+    private var currentFilter: BaseFilterRender? = null
+    private var currentFilterType: Int? = null
     init {
 //        glView.isKeepAspectRatio = true
         glView.setAspectRatioMode(AspectRatioMode.Adjust)
@@ -396,27 +399,45 @@ class CameraNativeView(
             spriteGestureController.stopListener()
           when (type) {
             0 -> {
-              rtmpCamera.glInterface?.setFilter(BasicDeformationFilterRender())
+              val f = BasicDeformationFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             1 -> {
-              rtmpCamera.glInterface?.setFilter(BeautyFilterRender())
+              val f = BeautyFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             2 -> {
-              rtmpCamera.glInterface?.setFilter(BlackFilterRender())
+              val f = BlackFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             3 -> {
-              rtmpCamera.glInterface?.setFilter(BlurFilterRender())
+              val f = BlurFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             4 -> {
-              rtmpCamera.glInterface?.setFilter(BrightnessFilterRender())
+              val f = BrightnessFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             5 -> {
-              rtmpCamera.glInterface?.setFilter(CartoonFilterRender())
+              val f = CartoonFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             6 -> {
@@ -429,61 +450,102 @@ class CameraNativeView(
               chromaFilterRender.setImage(
                 BitmapFactory.decodeFile(filePath)
               )
+              currentFilter = chromaFilterRender
+              currentFilterType = type
               result.success(null)
             }
             7 -> {
-              rtmpCamera.glInterface?.setFilter(ChromaticAberrationFilterRender())
+              val f = ChromaticAberrationFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             8 -> {
-              rtmpCamera.glInterface?.setFilter(CircleFilterRender())
+              val f = CircleFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             9 -> {
-              rtmpCamera.glInterface?.setFilter(ColorFilterRender())
+              val f = ColorFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             10 -> {
-              rtmpCamera.glInterface?.setFilter(ContrastFilterRender())
+              val f = ContrastFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             11 -> {
-              rtmpCamera.glInterface?.setFilter(CropFilterRender().apply {
+              val f = CropFilterRender().apply {
                 //crop center of the image with 40% of width and 40% of height
                 setCropArea(30f, 30f, 40f, 40f)
-              })
+              }
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             12 -> {
-              rtmpCamera.glInterface?.setFilter(DistortedTvFilterRender())
+              val f = DistortedTvFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             13 -> {
-              rtmpCamera.glInterface?.setFilter(DuotoneFilterRender())
+              val f = DuotoneFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             14 -> {
-              rtmpCamera.glInterface?.setFilter(EarlyBirdFilterRender())
+              val f = EarlyBirdFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             15 -> {
-              rtmpCamera.glInterface?.setFilter(EdgeDetectionFilterRender())
+              val f = EdgeDetectionFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             16 -> {
-              rtmpCamera.glInterface?.setFilter(ExposureFilterRender())
+              val f = ExposureFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             17 -> {
-              rtmpCamera.glInterface?.setFilter(FireFilterRender())
+              val f = FireFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             18 -> {
-              rtmpCamera.glInterface?.setFilter(GammaFilterRender())
+              val f = GammaFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             19 -> {
-              rtmpCamera.glInterface?.setFilter(GlitchFilterRender())
+              val f = GlitchFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             20 -> {
@@ -499,14 +561,22 @@ class CameraNativeView(
               gifObjectFilterRender.setScale(50f, 50f)
               gifObjectFilterRender.setPosition(TranslateTo.BOTTOM)
               spriteGestureController.setBaseObjectFilterRender(gifObjectFilterRender)
+              currentFilter = gifObjectFilterRender
+              currentFilterType = type
               result.success(null)
             }
             21 -> {
-              rtmpCamera.glInterface?.setFilter(GreyScaleFilterRender())
+              val f = GreyScaleFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             22 -> {
-              rtmpCamera.glInterface?.setFilter(HalftoneLinesFilterRender())
+              val f = HalftoneLinesFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             23 -> {
@@ -523,70 +593,115 @@ class CameraNativeView(
               imageObjectFilterRender.setPosition(TranslateTo.RIGHT)
               spriteGestureController.setBaseObjectFilterRender(imageObjectFilterRender) //Optional
               spriteGestureController.setPreventMoveOutside(false)
+              currentFilter = imageObjectFilterRender
+              currentFilterType = type
               result.success(null)
             }
             24 -> {
-              rtmpCamera.glInterface?.setFilter(Image70sFilterRender())
+              val f = Image70sFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             25 -> {
-              rtmpCamera.glInterface?.setFilter(LamoishFilterRender())
+              val f = LamoishFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             26 -> {
-              rtmpCamera.glInterface?.setFilter(MoneyFilterRender())
+              val f = MoneyFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             27 -> {
-              rtmpCamera.glInterface?.setFilter(NegativeFilterRender())
+              val f = NegativeFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             28 -> {
-              rtmpCamera.glInterface?.setFilter(NoiseFilterRender())
+              val f = NoiseFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             29 -> {
-              rtmpCamera.glInterface?.setFilter(PixelatedFilterRender())
+              val f = PixelatedFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             30 -> {
-              rtmpCamera.glInterface?.setFilter(PolygonizationFilterRender())
+              val f = PolygonizationFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             31 -> {
-              rtmpCamera.glInterface?.setFilter(RainbowFilterRender())
+              val f = RainbowFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             32 -> {
               val rgbSaturationFilterRender = RGBSaturationFilterRender()
               rtmpCamera.glInterface?.setFilter(rgbSaturationFilterRender)
               rgbSaturationFilterRender.setRGBSaturation(1f, 0.8f, 0.8f)
+              currentFilter = rgbSaturationFilterRender
+              currentFilterType = type
               result.success(null)
             }
             33 -> {
-              rtmpCamera.glInterface?.setFilter(RippleFilterRender())
+              val f = RippleFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             34 -> {
               val rotationFilterRender = RotationFilterRender()
               rtmpCamera.glInterface?.setFilter(rotationFilterRender)
               rotationFilterRender.rotation = 90
+              currentFilter = rotationFilterRender
+              currentFilterType = type
               result.success(null)
             }
             35 -> {
-              rtmpCamera.glInterface?.setFilter(SaturationFilterRender())
+              val f = SaturationFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             36 -> {
-              rtmpCamera.glInterface?.setFilter(SepiaFilterRender())
+              val f = SepiaFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             37 -> {
-              rtmpCamera.glInterface?.setFilter(SharpnessFilterRender())
+              val f = SharpnessFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             38-> {
-              rtmpCamera.glInterface?.setFilter(SnowFilterRender())
+              val f = SnowFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             39-> {
@@ -604,10 +719,15 @@ class CameraNativeView(
               rtmpCamera.glInterface?.setFilter(surfaceFilterRender)
               surfaceFilterRender.setScale(50f, 33.3f)
               spriteGestureController.setBaseObjectFilterRender(surfaceFilterRender)
+              currentFilter = surfaceFilterRender
+              currentFilterType = type
               result.success(null)
             }
             40 -> {
-              rtmpCamera.glInterface?.setFilter(TemperatureFilterRender())
+              val f = TemperatureFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             41 -> {
@@ -617,10 +737,15 @@ class CameraNativeView(
               textObjectFilterRender.setScale(50f, 50f)
               textObjectFilterRender.setPosition(TranslateTo.CENTER)
               spriteGestureController.setBaseObjectFilterRender(textObjectFilterRender) //Optional
+              currentFilter = textObjectFilterRender
+              currentFilterType = type
               result.success(null)
             }
             42 -> {
-              rtmpCamera.glInterface?.setFilter(ZebraFilterRender())
+              val f = ZebraFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
               result.success(null)
             }
             else -> {
@@ -635,198 +760,23 @@ class CameraNativeView(
         }
     }
 
-    //移除滤镜
+    //移除滤镜：必须使用 setFilter 时缓存的同一滤镜实例，底层按对象引用比较
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun removeFilter(type: Int?, result: MethodChannel.Result) {
         try {
-          if(type == null){
+          if (type == null) {
             result.error("removeFilter", "type is empty", null)
             return
           }
           spriteGestureController.stopListener()
-          when (type) {
-            0 -> {
-              rtmpCamera.glInterface?.removeFilter(BasicDeformationFilterRender())
-              result.success(null)
-            }
-            1 -> {
-              rtmpCamera.glInterface?.removeFilter(BeautyFilterRender())
-              result.success(null)
-            }
-            2 -> {
-              rtmpCamera.glInterface?.removeFilter(BlackFilterRender())
-              result.success(null)
-            }
-            3 -> {
-              rtmpCamera.glInterface?.removeFilter(BlurFilterRender())
-              result.success(null)
-            }
-            4 -> {
-              rtmpCamera.glInterface?.removeFilter(BrightnessFilterRender())
-              result.success(null)
-            }
-            5 -> {
-              rtmpCamera.glInterface?.removeFilter(CartoonFilterRender())
-              result.success(null)
-            }
-            6 -> {
-              val chromaFilterRender = ChromaFilterRender()
-              rtmpCamera.glInterface?.removeFilter(chromaFilterRender)
-              result.success(null)
-            }
-            7 -> {
-              rtmpCamera.glInterface?.removeFilter(ChromaticAberrationFilterRender())
-              result.success(null)
-            }
-            8 -> {
-              rtmpCamera.glInterface?.removeFilter(CircleFilterRender())
-              result.success(null)
-            }
-            9 -> {
-              rtmpCamera.glInterface?.removeFilter(ColorFilterRender())
-              result.success(null)
-            }
-            10 -> {
-              rtmpCamera.glInterface?.removeFilter(ContrastFilterRender())
-              result.success(null)
-            }
-            11 -> {
-              rtmpCamera.glInterface?.removeFilter(CropFilterRender())
-              result.success(null)
-            }
-            12 -> {
-              rtmpCamera.glInterface?.removeFilter(DistortedTvFilterRender())
-              result.success(null)
-            }
-            13 -> {
-              rtmpCamera.glInterface?.removeFilter(DuotoneFilterRender())
-              result.success(null)
-            }
-            14 -> {
-              rtmpCamera.glInterface?.removeFilter(EarlyBirdFilterRender())
-              result.success(null)
-            }
-            15 -> {
-              rtmpCamera.glInterface?.removeFilter(EdgeDetectionFilterRender())
-              result.success(null)
-            }
-            16 -> {
-              rtmpCamera.glInterface?.removeFilter(ExposureFilterRender())
-              result.success(null)
-            }
-            17 -> {
-              rtmpCamera.glInterface?.removeFilter(FireFilterRender())
-              result.success(null)
-            }
-            18 -> {
-              rtmpCamera.glInterface?.removeFilter(GammaFilterRender())
-              result.success(null)
-            }
-            19 -> {
-              rtmpCamera.glInterface?.removeFilter(GlitchFilterRender())
-              result.success(null)
-            }
-            20 -> {
-              val gifObjectFilterRender = GifObjectFilterRender()
-              rtmpCamera.glInterface?.removeFilter(gifObjectFilterRender)
-              result.success(null)
-            }
-            21 -> {
-              rtmpCamera.glInterface?.removeFilter(GreyScaleFilterRender())
-              result.success(null)
-            }
-            22 -> {
-              rtmpCamera.glInterface?.removeFilter(HalftoneLinesFilterRender())
-              result.success(null)
-            }
-            23 -> {
-              val imageObjectFilterRender = ImageObjectFilterRender()
-              rtmpCamera.glInterface?.removeFilter(imageObjectFilterRender)
-              result.success(null)
-            }
-            24 -> {
-              rtmpCamera.glInterface?.removeFilter(Image70sFilterRender())
-              result.success(null)
-            }
-            25 -> {
-              rtmpCamera.glInterface?.removeFilter(LamoishFilterRender())
-              result.success(null)
-            }
-            26 -> {
-              rtmpCamera.glInterface?.removeFilter(MoneyFilterRender())
-              result.success(null)
-            }
-            27 -> {
-              rtmpCamera.glInterface?.removeFilter(NegativeFilterRender())
-              result.success(null)
-            }
-            28 -> {
-              rtmpCamera.glInterface?.removeFilter(NoiseFilterRender())
-              result.success(null)
-            }
-            29 -> {
-              rtmpCamera.glInterface?.removeFilter(PixelatedFilterRender())
-              result.success(null)
-            }
-            30 -> {
-              rtmpCamera.glInterface?.removeFilter(PolygonizationFilterRender())
-              result.success(null)
-            }
-            31 -> {
-              rtmpCamera.glInterface?.removeFilter(RainbowFilterRender())
-              result.success(null)
-            }
-            32 -> {
-              val rgbSaturationFilterRender = RGBSaturationFilterRender()
-              rtmpCamera.glInterface?.removeFilter(rgbSaturationFilterRender)
-              result.success(null)
-            }
-            33 -> {
-              rtmpCamera.glInterface?.removeFilter(RippleFilterRender())
-              result.success(null)
-            }
-            34 -> {
-              val rotationFilterRender = RotationFilterRender()
-              rtmpCamera.glInterface?.removeFilter(rotationFilterRender)
-              result.success(null)
-            }
-            35 -> {
-              rtmpCamera.glInterface?.removeFilter(SaturationFilterRender())
-              result.success(null)
-            }
-            36 -> {
-              rtmpCamera.glInterface?.removeFilter(SepiaFilterRender())
-              result.success(null)
-            }
-            37 -> {
-              rtmpCamera.glInterface?.removeFilter(SharpnessFilterRender())
-              result.success(null)
-            }
-            38-> {
-              rtmpCamera.glInterface?.removeFilter(SnowFilterRender())
-              result.success(null)
-            }
-            39-> {
-              rtmpCamera.glInterface?.removeFilter(SurfaceFilterRender())
-              result.success(null)
-            }
-            40 -> {
-              rtmpCamera.glInterface?.removeFilter(TemperatureFilterRender())
-              result.success(null)
-            }
-            41 -> {
-              val textObjectFilterRender = TextObjectFilterRender()
-              rtmpCamera.glInterface?.removeFilter(textObjectFilterRender)
-              result.success(null)
-            }
-            42 -> {
-              rtmpCamera.glInterface?.removeFilter(ZebraFilterRender())
-              result.success(null)
-            }
-            else -> {
-              result.success(null)
-            }
+          val filterToRemove = currentFilter
+          val filterType = currentFilterType
+          if (filterToRemove != null && filterType == type) {
+            rtmpCamera.glInterface?.removeFilter(filterToRemove)
+            currentFilter = null
+            currentFilterType = null
           }
+          result.success(null)
         } catch (e: CameraAccessException) {
           result.error("removeFilter", e.message, null)
         } catch (e: IOException) {

@@ -12,7 +12,7 @@ let package = Package(
         .library(name: "rtmp-streaming", targets: ["rtmp_streaming"])
     ],
     dependencies: [
-        .package(url: "https://github.com/HaishinKit/HaishinKit.swift", exact: "2.2.3")
+        .package(url: "https://github.com/HaishinKit/HaishinKit.swift", exact: "2.2.4")
     ],
     targets: [
         .target(
