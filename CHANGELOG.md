@@ -33,4 +33,8 @@
 
 ## 1.0.1
 1. update package
-2. add - 📸 Take snapshot during streaming: `takePicture`  
+2. add - 📸 Take snapshot during streaming: `takePicture`
+
+## 1.0.2
+1. update package
+2. fix bug not removeFilter
