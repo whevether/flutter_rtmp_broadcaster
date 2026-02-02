@@ -140,47 +140,54 @@ final class MediaMixerHandler: NSObject {
     return texture?.textureId
   }
   
+  /// 与 Android 对齐：同一 resolutionPreset 使用相同的 session preset 与目标分辨率
+  private static func sessionPresetString(for resolution: String) -> String? {
+    switch resolution {
+    case "low": return "cif352x288"
+    case "medium": return "vga640x480"
+    case "high": return "hd1280x720"
+    case "veryHigh": return "hd1920x1080"
+    case "ultraHigh": return "hd4K3840x2160"
+    case "max": return nil
+    default: return "hd1280x720"
+    }
+  }
+
+  /// 与 Android 对齐：统一目标分辨率 (width x height, landscape)
+  private static func targetSize(for resolution: String, device: AVCaptureDevice?) -> CGSize {
+    switch resolution {
+    case "low": return CGSize(width: 352, height: 288)
+    case "medium": return CGSize(width: 640, height: 480)
+    case "high": return CGSize(width: 1280, height: 720)
+    case "veryHigh": return CGSize(width: 1920, height: 1080)
+    case "ultraHigh": return CGSize(width: 3840, height: 2160)
+    case "max":
+      if let device = device {
+        let dimensions = device.activeFormat.highResolutionStillImageDimensions
+        return CGSize(width: Int(dimensions.width), height: Int(dimensions.height))
+      }
+      return CGSize(width: 1920, height: 1080)
+    default: return CGSize(width: 1280, height: 720)
+    }
+  }
+
   //附加视频到直播
   func attachVideo(resolution: String?, cameraId: String?)async ->CGSize{
-    //    print("cameraId \(cameraId)")
-    if(cameraId == nil){
+    if cameraId == nil {
       try? await mixer.attachVideo(nil, track: 0)
       return .zero
-    }else{
-#if os(iOS)
-      let device = AVCaptureDevice(uniqueID: cameraId!)
-      //      let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
-#else
-      let device = AVCaptureDevice.devices(for: .video).first
-#endif
-      if let device = device {
-        try? await mixer.attachVideo(device, track: 0)
-        if let resolution{
-          switch resolution {
-          case "max":
-            let dimensions = device.activeFormat.highResolutionStillImageDimensions
-            return CGSize(width: Int(dimensions.width), height: Int(dimensions.height))
-          case "ultraHigh":
-            return CGSize(width: 2160, height: 3840)
-          case "veryHigh":
-            return CGSize(width: 1080, height: 1920)
-          case "high":
-            return CGSize(width: 720, height: 1280)
-          case "medium":
-            return CGSize(width: 480, height: 640)
-          case "low":
-            return CGSize(width: 288, height: 352)
-          default:
-            return .zero
-          }
-        }else{
-          return .zero
-        }
-        
-      }else{
-        return .zero
-      }
     }
-    
+#if os(iOS)
+    guard let device = AVCaptureDevice(uniqueID: cameraId!) else { return .zero }
+#else
+    guard let device = AVCaptureDevice.devices(for: .video).first else { return .zero }
+#endif
+    try? await mixer.attachVideo(device, track: 0)
+    guard let resolution = resolution else { return .zero }
+
+    if let presetString = Self.sessionPresetString(for: resolution) {
+      await setSessionPreset(sessionPreset: presetString)
+    }
+    return Self.targetSize(for: resolution, device: device)
   }
 }

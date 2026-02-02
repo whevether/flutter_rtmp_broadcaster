@@ -20,27 +20,54 @@ import java.util.*
 
 /** Provides various utilities for camera.  */
 object CameraUtils {
+    /**
+     * 与 iOS 对齐的预设目标分辨率 (width x height)。
+     * 同一 resolutionPreset 在 Android 与 iOS 上得到相同或最接近的分辨率。
+     */
+    private fun getTargetSizeForPreset(preset: ResolutionPreset): Pair<Int, Int> = when (preset) {
+        ResolutionPreset.low -> Pair(352, 288)       // CIF
+        ResolutionPreset.medium -> Pair(640, 480)    // VGA
+        ResolutionPreset.high -> Pair(1280, 720)      // 720p
+        ResolutionPreset.veryHigh -> Pair(1920, 1080) // 1080p
+        ResolutionPreset.ultraHigh -> Pair(3840, 2160) // 4K
+        ResolutionPreset.max -> Pair(Int.MAX_VALUE, Int.MAX_VALUE) // 取设备最大
+    }
+
+    /** 从可用尺寸中选取最接近目标 (targetW, targetH) 的尺寸；max 时取面积最大。 */
+    private fun selectClosestSize(available: Array<Size>, preset: ResolutionPreset): Size {
+        if (available.isEmpty()) throw IllegalArgumentException("No available sizes")
+        val (targetW, targetH) = getTargetSizeForPreset(preset)
+        return if (preset == ResolutionPreset.max) {
+            available.maxWithOrNull(CompareSizesByArea()) ?: available.first()
+        } else {
+            available.minByOrNull { size ->
+                val dw = size.width - targetW
+                val dh = size.height - targetH
+                dw * dw + dh * dh
+            } ?: available.first()
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun computeBestPreviewSize(activity: Activity?,cameraName: String, presetArg: ResolutionPreset): Map<String,Any> {
-        val sizeList = getCameraResolutions(activity,cameraName)
-        if(sizeList.count() > 0){
-            val size = sizeList.first()
-            val map = HashMap<String,Any>()
-            map["size"] = size;
-            map["bitrate"] = 1200 * 1000
-//            Log.i("error","${size.width},${size.height}")
-            return map
+        val sizeList = getCameraResolutions(activity, cameraName)
+        val size: Size
+        val bitrate: Int
+        if (sizeList.isNotEmpty()) {
+            size = selectClosestSize(sizeList, presetArg)
+            bitrate = 1200 * 1000
+        } else {
+            var preset = presetArg
+            if (preset.ordinal > ResolutionPreset.high.ordinal) {
+                preset = ResolutionPreset.high
+            }
+            val profile = getBestAvailableCamcorderProfileForResolutionPreset(cameraName, preset)
+            size = Size(profile.videoFrameWidth, profile.videoFrameHeight)
+            bitrate = profile.videoBitRate
         }
-        var preset = presetArg
-        if (preset.ordinal > ResolutionPreset.high.ordinal) {
-            preset = ResolutionPreset.high
-        }
-        val profile = getBestAvailableCamcorderProfileForResolutionPreset(cameraName, preset)
-        val size = Size(profile.videoFrameWidth, profile.videoFrameHeight)
-        val map = HashMap<String,Any>()
-//        Log.i("error1","${size.width},${size.height}")
-        map["size"] = size;
-        map["bitrate"] = profile.videoBitRate
+        val map = HashMap<String, Any>()
+        map["size"] = size
+        map["bitrate"] = bitrate
         return map
     }
 
