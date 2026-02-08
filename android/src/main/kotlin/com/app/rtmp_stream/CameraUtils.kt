@@ -104,7 +104,7 @@ object CameraUtils {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun getCameraResolutions(activity: Activity?,cameraId: String): Array<Size> {
         try {
-            val cameraManager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val cameraManager = activity?.getSystemService(Context.CAMERA_SERVICE) as? CameraManager ?: return arrayOf()
             val characteristics = cameraManager.getCameraCharacteristics(cameraId)
             val streamConfigurationMap = characteristics.secureGet(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: return arrayOf()
             val outputSizes = streamConfigurationMap.getOutputSizes(SurfaceTexture::class.java)

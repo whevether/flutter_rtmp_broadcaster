@@ -188,32 +188,58 @@ class MethodCallHandlerImplNew(
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @Throws(CameraAccessException::class)
     private fun instantiateCamera(call: MethodCall, result: MethodChannel.Result) {
-        handler!!.postDelayed({
-            val cameraName = call.argument<String>("cameraName") ?: "0"
-            val resolutionPreset = call.argument<String>("resolutionPreset")
-                ?: "low"
-            val enableAudio = call.argument<Boolean>("enableAudio")!!
-            
-            val preset = ResolutionPreset.valueOf(resolutionPreset)
-            val previewSize = CameraUtils.computeBestPreviewSize(activity,cameraName, preset)
-            val size = previewSize["size"] as Size
-            val reply: MutableMap<String, Any> = HashMap()
-            reply["textureId"] = textureId
-            reply["previewWidth"] = size.width
-            reply["previewHeight"] = size.height
-            reply["eventId"] = id
-            reply["previewQuarterTurns"] = currentOrientation / 90
-            Log.i(
-                "TAG",
-                "open: width: " + reply["previewWidth"] + " height: " + reply["previewHeight"] + " currentOrientation: " + currentOrientation + " quarterTurns: " + reply["previewQuarterTurns"]
-            )
-            // TODO Refactor cameraView initialisation
-            nativeViewFactory?.cameraName = cameraName
-            nativeViewFactory?.preset = preset
-            nativeViewFactory?.enableAudio = enableAudio
-            nativeViewFactory?.dartMessenger = dartMessenger
-            getCameraView()?.startPreview(cameraName)
-            result.success(reply)
+        val currentHandler = handler ?: run {
+            result.error("disposed", "Camera controller was disposed before initialization completed", null)
+            return
+        }
+        if (activity.isFinishing) {
+            result.error("activity_destroyed", "Activity is finishing, cannot initialize camera", null)
+            return
+        }
+        currentHandler.postDelayed({
+            if (activity.isFinishing) {
+                activity.runOnUiThread { result.error("activity_destroyed", "Activity was destroyed during initialization", null) }
+                return@postDelayed
+            }
+            try {
+                val cameraName = call.argument<String>("cameraName") ?: "0"
+                val resolutionPreset = call.argument<String>("resolutionPreset") ?: "low"
+                val enableAudio = call.argument<Boolean>("enableAudio") ?: true
+
+                val preset = ResolutionPreset.valueOf(resolutionPreset)
+                val previewSize = CameraUtils.computeBestPreviewSize(activity, cameraName, preset)
+                val size = previewSize["size"] as? Size ?: run {
+                    activity.runOnUiThread { result.error("CameraError", "Failed to compute preview size", null) }
+                    return@postDelayed
+                }
+                val reply: MutableMap<String, Any> = HashMap()
+                reply["textureId"] = textureId
+                reply["previewWidth"] = size.width
+                reply["previewHeight"] = size.height
+                reply["eventId"] = id
+                reply["previewQuarterTurns"] = currentOrientation / 90
+                Log.i(
+                    "TAG",
+                    "open: width: " + reply["previewWidth"] + " height: " + reply["previewHeight"] + " currentOrientation: " + currentOrientation + " quarterTurns: " + reply["previewQuarterTurns"]
+                )
+                // TODO Refactor cameraView initialisation
+                nativeViewFactory?.cameraName = cameraName
+                nativeViewFactory?.preset = preset
+                nativeViewFactory?.enableAudio = enableAudio
+                nativeViewFactory?.dartMessenger = dartMessenger
+                getCameraView()?.startPreview(cameraName)
+                // MethodChannel.Result must be invoked on the main thread
+                activity.runOnUiThread { result.success(reply) }
+            } catch (e: Exception) {
+                Log.e("TAG", "instantiateCamera failed", e)
+                activity.runOnUiThread {
+                    if (e is CameraAccessException) {
+                        result.error("CameraAccess", e.message, null)
+                    } else {
+                        result.error("CameraError", e.message ?: "Unknown error", null)
+                    }
+                }
+            }
         }, 100)
     }
 
