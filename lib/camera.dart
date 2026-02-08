@@ -1227,6 +1227,12 @@ class CameraController extends ValueNotifier<CameraValue> {
       return;
     }
     _isDisposed = true;
+    // Update state so UI reflects streaming/recording stopped before native dispose
+    value = value.copyWith(
+      isStreamingVideoRtmp: false,
+      isRecordingVideo: false,
+    );
+    notifyListeners();
     super.dispose();
     if (_creatingCompleter != null) {
       await _creatingCompleter!.future;

@@ -169,12 +169,16 @@ class MethodCallHandlerImplNew(
             }
             "dispose" -> {
                 Log.i("Stuff", "dispose")
-                getCameraView()?.stopVideoStreaming(result)
+                val view = getCameraView()
+                if (view != null) {
+                    // stopVideoStreaming calls result.success/error - do NOT call result again
+                    view.stopVideoStreaming(result)
+                } else {
+                    result.success(null)
+                }
                 handler = null
                 dartMessenger = null
-                nativeViewFactory = null
-                // Native camera view handles the view lifecircle by themselves
-                result.success(null)
+                // Keep nativeViewFactory for hot restart - Flutter will call initialize again
             }
 
             else -> result.notImplemented()
@@ -188,9 +192,15 @@ class MethodCallHandlerImplNew(
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @Throws(CameraAccessException::class)
     private fun instantiateCamera(call: MethodCall, result: MethodChannel.Result) {
-        val currentHandler = handler ?: run {
-            result.error("disposed", "Camera controller was disposed before initialization completed", null)
-            return
+        val currentHandler: Handler = if (handler != null) {
+            handler!!
+        } else {
+            // Re-init after dispose (e.g. hot restart) - recreate handler and dartMessenger
+            val handlerThread = HandlerThread("WorkerThread").apply { start() }
+            Handler(handlerThread.looper).also {
+                handler = it
+                dartMessenger = DartMessenger(messenger, id)
+            }
         }
         if (activity.isFinishing) {
             result.error("activity_destroyed", "Activity is finishing, cannot initialize camera", null)
