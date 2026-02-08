@@ -38,3 +38,6 @@
 ## 1.0.2
 1. update package
 2. fix bug not removeFilter
+
+## 1.0.3
+1. fix android permission bug
