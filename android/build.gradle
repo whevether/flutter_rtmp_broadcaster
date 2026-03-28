@@ -1,8 +1,8 @@
 group 'com.app.rtmp_stream'
-version '1.0.3'
+version '1.0.4'
 
 buildscript {
-    ext.kotlin_version = '2.3.0'
+    ext.kotlin_version = '2.3.10'
     repositories {
         google()
         mavenCentral()
@@ -28,7 +28,7 @@ apply plugin: 'kotlin-android'
 android {
     namespace 'com.app.rtmp_stream'
     compileSdkVersion 36
-    buildToolsVersion "36.0.0"
+    buildToolsVersion "36.1.0"
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -50,5 +50,5 @@ android {
 dependencies {
     implementation 'androidx.annotation:annotation:1.9.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.github.pedroSG94.RootEncoder:library:2.6.7'
+    implementation 'com.github.pedroSG94.RootEncoder:library:2.7.1'
 }
