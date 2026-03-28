@@ -7,8 +7,8 @@ It addresses the lack of suitable Flutter RTMP plugins on pub.dev: existing plug
 ---
 
 ## ⚙️ Technical Foundation
-- **Android**: Based on [`com.github.pedroSG94.RootEncoder:library:2.6.6`](https://github.com/pedroSG94/RootEncoder)  
-- **iOS**: Based on [HaishinKit 2.2.2](https://github.com/shogo4405/HaishinKit.swift)  
+- **Android**: Based on [`com.github.pedroSG94.RootEncoder:library:2.7.1`](https://github.com/pedroSG94/RootEncoder)  
+- **iOS**: Based on [HaishinKit 2.2.5](https://github.com/shogo4405/HaishinKit.swift)  
 
 By leveraging these mature libraries, `rtmp_stream` provides a consistent cross-platform API interface, reducing development complexity.
 
