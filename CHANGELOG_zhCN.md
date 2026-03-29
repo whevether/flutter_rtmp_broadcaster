@@ -42,8 +42,13 @@
 ## 1.0.3
 1. 修复 android 权限bug
 
+
+
 ## 1.0.4
 1. 更新 HaishinKit.swift 到 2.2.5 修复 xcode 26.4 编译错误
 2. 更新 com.github.pedroSG94.RootEncoder 到 2.7.1
-
+3. **文档**：在 README / README_zhCN 中补充以下 `CameraController` 的用法说明：
+   - **Android（RootEncoder 2.7.0+）**：`setForceBt709Color`、`setRtmpShouldSendPings` — 编码使用 BT.709 色彩矩阵；RTMP 周期 ping 以测量往返时延（配合 `getStreamStatistics` 中的 `rttMicros` 等字段）。
+   - **iOS（HaishinKit 2.2.1+ / 2.2.2+ / 2.2.5+）**：`setVideoSettings` — 可选参数 `expectedFrameRate`（写入 RTMP onMetaData 的 `framerate`）、`bitRateMode`（`average` / `constant` / `variable`）；`setMultitaskingCameraAccessEnabled` — 分屏/多任务场景下保持相机（需 iOS 17+ 且设备支持）。
+4. 本版本变更日志与上述说明对应，便于查阅与版本对齐。
 

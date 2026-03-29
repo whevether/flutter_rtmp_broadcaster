@@ -53,6 +53,15 @@ class CameraExampleHomeState extends State<CameraExampleHome>
   final TextEditingController _textFieldController =
       TextEditingController(text: "rtmp://192.168.1.15/live/live");
 
+  /// RootEncoder 2.7.0+：BT.709 与 RTMP ping/RTT 示例
+  bool _forceBt709 = false;
+  bool _rtmpShouldSendPings = false;
+  Timer? _streamStatsTimer;
+  String _androidStreamStatsLine = '';
+
+  /// HaishinKit 2.2.5+：分屏/多任务时保持相机（iOS 17+）
+  bool _iosMultitaskingCamera = false;
+
   bool get isStreaming => controller.value.isStreamingVideoRtmp ?? false;
 
   bool get isControllerInitialized => controller.value.isInitialized ?? false;
@@ -77,6 +86,7 @@ class CameraExampleHomeState extends State<CameraExampleHome>
 
   //
   void onDispose() async {
+    _streamStatsTimer?.cancel();
     await WakelockPlus.disable();
     await controller.dispose();
   }
@@ -117,6 +127,14 @@ class CameraExampleHomeState extends State<CameraExampleHome>
           ElevatedButton(onPressed: isControllerInitialized ? ()async{
             await controller.removeFilter(0);
           } : null, child: Text("remove filter")),
+          ElevatedButton(
+            onPressed: isControllerInitialized
+                ? () async {
+                    await controller.setFilter(43);
+                  }
+                : null,
+            child: const Text('edge HQ'),
+          ),
         ] : null,
       ),
       body: Column(
@@ -349,6 +367,66 @@ class CameraExampleHomeState extends State<CameraExampleHome>
             }
           },
         ),
+        if (Platform.isAndroid) ...[
+          const SizedBox(height: 8),
+          Text('BT.709 色彩 (RootEncoder 2.7+)'),
+          Switch(
+            value: _forceBt709,
+            onChanged: (v) {
+              setState(() => _forceBt709 = v);
+            },
+          ),
+          Text('RTMP Ping / RTT (需推流前开启)'),
+          Switch(
+            value: _rtmpShouldSendPings,
+            onChanged: (v) {
+              setState(() => _rtmpShouldSendPings = v);
+            },
+          ),
+          if (_androidStreamStatsLine.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                _androidStreamStatsLine,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+        ],
+        if (Platform.isIOS) ...[
+          const SizedBox(height: 8),
+          const Text('多任务相机 (HaishinKit 2.2.5+, iOS 17+)'),
+          Switch(
+            value: _iosMultitaskingCamera,
+            onChanged: (bool v) async {
+              setState(() => _iosMultitaskingCamera = v);
+              if (!isControllerInitialized) {
+                return;
+              }
+              try {
+                await controller.setMultitaskingCameraAccessEnabled(v);
+              } on CameraException catch (e) {
+                _showCameraException(e);
+              }
+            },
+          ),
+          ElevatedButton(
+            onPressed: isControllerInitialized
+                ? () async {
+                    try {
+                      await controller.setVideoSettings(
+                        expectedFrameRate: 30,
+                        bitRateMode: 'average',
+                      );
+                      showInSnackBar(
+                          '已设置 expectedFrameRate=30、bitRateMode=average（2.2.2 onMetaData / 2.2.1 VBR 基础）');
+                    } on CameraException catch (e) {
+                      _showCameraException(e);
+                    }
+                  }
+                : null,
+            child: const Text('HaishinKit 视频编码示例'),
+          ),
+        ],
         
         _thumbnailWidget(),
       ],
@@ -430,6 +508,13 @@ class CameraExampleHomeState extends State<CameraExampleHome>
     }
     try {
       await controller.initialize(cameraDescription);
+      if (Platform.isIOS && _iosMultitaskingCamera) {
+        try {
+          await controller.setMultitaskingCameraAccessEnabled(true);
+        } on CameraException catch (e) {
+          _showCameraException(e);
+        }
+      }
     } on CameraException catch (e) {
       _showCameraException(e);
     }
@@ -543,9 +628,14 @@ class CameraExampleHomeState extends State<CameraExampleHome>
       return;
     }
     try {
+      if (Platform.isAndroid) {
+        await controller.setForceBt709Color(_forceBt709);
+        await controller.setRtmpShouldSendPings(_rtmpShouldSendPings);
+      }
       await controller.startVideoStreaming(myUrl);
       showInSnackBar('Streaming video to $myUrl');
       await WakelockPlus.enable();
+      _startAndroidStreamStatsTimer();
     } on CameraException catch (e) {
       _showCameraException(e);
       return;
@@ -579,10 +669,15 @@ class CameraExampleHomeState extends State<CameraExampleHome>
     final String filePath = '$dirPath/${timestamp()}.mp4';
 
     try {
+      if (Platform.isAndroid) {
+        await controller.setForceBt709Color(_forceBt709);
+        await controller.setRtmpShouldSendPings(_rtmpShouldSendPings);
+      }
       videoPath = filePath;
       await controller.startVideoRecordingAndStreaming(videoPath!, myUrl);
       showInSnackBar('Recording streaming video to $myUrl');
       await WakelockPlus.enable();
+      _startAndroidStreamStatsTimer();
     } on CameraException catch (e) {
       _showCameraException(e);
       return;
@@ -590,6 +685,31 @@ class CameraExampleHomeState extends State<CameraExampleHome>
   }
 
   // stop video
+  void _startAndroidStreamStatsTimer() {
+    if (!Platform.isAndroid) return;
+    _streamStatsTimer?.cancel();
+    _streamStatsTimer =
+        Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (!mounted || !isStreaming) return;
+      try {
+        final s = await controller.getStreamStatistics();
+        if (!mounted) return;
+        setState(() {
+          _androidStreamStatsLine =
+              'fps=${s.fps}  RTT=${s.rttMicros}µs  已发送字节=${s.bytesSend}';
+        });
+      } catch (_) {}
+    });
+  }
+
+  void _stopAndroidStreamStatsTimer() {
+    _streamStatsTimer?.cancel();
+    _streamStatsTimer = null;
+    if (mounted) {
+      setState(() => _androidStreamStatsLine = '');
+    }
+  }
+
   void stopRecordingOrStreaming() async {
     if (!isStreaming && !isRecordingVideo) {
       showInSnackBar('Video stop streamed or recording');
@@ -597,6 +717,7 @@ class CameraExampleHomeState extends State<CameraExampleHome>
     }
     try {
       await controller.stopRecordingOrStreaming();
+      _stopAndroidStreamStatsTimer();
       await WakelockPlus.disable();
     } on CameraException catch (e) {
       _showCameraException(e);
@@ -702,6 +823,7 @@ class CameraExampleHomeState extends State<CameraExampleHome>
 
     try {
       await controller.stopVideoStreaming();
+      _stopAndroidStreamStatsTimer();
     } on CameraException catch (e) {
       _showCameraException(e);
       return;

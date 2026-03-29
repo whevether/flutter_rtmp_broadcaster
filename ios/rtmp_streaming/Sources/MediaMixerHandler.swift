@@ -190,4 +190,18 @@ final class MediaMixerHandler: NSObject {
     }
     return Self.targetSize(for: resolution, device: device)
   }
+
+#if os(iOS)
+  /// HaishinKit 2.2.5+：分屏、画中画等场景下保持相机采集（需设备支持 `isMultitaskingCameraAccessSupported`）。
+  /// 通过 `MediaMixer.configuration` 写入底层 `AVCaptureSession`（iOS 17+ 与 HaishinKit API 一致）。
+  func setMultitaskingCameraAccessEnabled(_ enabled: Bool) async {
+    if #available(iOS 17.0, *) {
+      await mixer.configuration { session in
+        if session.isMultitaskingCameraAccessSupported {
+          session.isMultitaskingCameraAccessEnabled = enabled
+        }
+      }
+    }
+  }
+#endif
 }

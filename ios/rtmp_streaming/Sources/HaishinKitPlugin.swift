@@ -230,7 +230,15 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
           }
         }
       }
-      await setVideoSettings(bitrate: frameRate, width: nil, height: nil, frameInterval: nil, profileLevel: nil)
+      await setVideoSettings(
+        bitrate: frameRate,
+        width: nil,
+        height: nil,
+        frameInterval: nil,
+        profileLevel: nil,
+        expectedFrameRate: nil,
+        bitRateMode: nil
+      )
       
       try await newRtmpConnection.connect(newUrl)
       return nil
@@ -405,10 +413,20 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
       return FlutterError(code: "setAudioSettingsError", message: "catch error", details: nil)
     }
   }
-  //设置视频
-  private func setVideoSettings(bitrate: NSNumber?,width: NSNumber?,height: NSNumber?,frameInterval: NSNumber?,profileLevel: String?)async-> FlutterError?{
-    do{
-      guard let newRtmpStream = rtmpStream else { return FlutterError(code: "setVideoSettingsError", message: "rtmp Stream error", details: nil)}
+  //设置视频（含 HaishinKit 2.2.1+ 码率模式、2.2.2+ expectedFrameRate → RTMP onMetaData framerate）
+  private func setVideoSettings(
+    bitrate: NSNumber?,
+    width: NSNumber?,
+    height: NSNumber?,
+    frameInterval: NSNumber?,
+    profileLevel: String?,
+    expectedFrameRate: NSNumber?,
+    bitRateMode: String?
+  ) async -> FlutterError? {
+    do {
+      guard let newRtmpStream = rtmpStream else {
+        return FlutterError(code: "setVideoSettingsError", message: "rtmp Stream error", details: nil)
+      }
       var videoSettings = await newRtmpStream.videoSettings
       if let bitrate {
         videoSettings.bitRate = bitrate.intValue
@@ -422,13 +440,48 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
       if let profileLevel {
         videoSettings.profileLevel = ProfileLevel(rawValue: profileLevel)?.kVTProfileLevel ?? ProfileLevel.H264_Baseline_AutoLevel.kVTProfileLevel
       }
-      _ = try? await rtmpStream?.setVideoSettings(videoSettings)
+      if let expectedFrameRate {
+        videoSettings.expectedFrameRate = expectedFrameRate.doubleValue
+      }
+      if let bitRateMode {
+        switch bitRateMode.lowercased() {
+        case "average":
+          videoSettings.bitRateMode = .average
+        case "constant":
+          if #available(iOS 16.0, *) {
+            videoSettings.bitRateMode = .constant
+          } else {
+            return FlutterError(code: "setVideoSettingsError", message: "constant bit rate requires iOS 16+", details: nil)
+          }
+        case "variable":
+          if #available(iOS 26.0, *) {
+            videoSettings.bitRateMode = .variable
+          } else {
+            return FlutterError(code: "setVideoSettingsError", message: "variable bit rate requires iOS 26+", details: nil)
+          }
+        default:
+          break
+        }
+      }
+      try await newRtmpStream.setVideoSettings(videoSettings)
       return nil
-      
-    }catch{
-      return FlutterError(code: "setVideoSettingsError", message: "catch error", details: nil)
+    } catch {
+      return FlutterError(code: "setVideoSettingsError", message: error.localizedDescription, details: nil)
     }
   }
+
+  #if os(iOS)
+  private func setMultitaskingCameraAccessEnabled(enabled: Bool) async -> FlutterError? {
+    guard let newMixer = mixer else {
+      return FlutterError(code: "setMultitaskingCameraAccessEnabledError", message: "mixer empty", details: nil)
+    }
+    if #available(iOS 17.0, *) {
+      await newMixer.setMultitaskingCameraAccessEnabled(enabled)
+      return nil
+    }
+    return FlutterError(code: "setMultitaskingCameraAccessEnabledError", message: "Requires iOS 17+", details: nil)
+  }
+  #endif
   //方法句柄
   // MARK: FlutterPlugin
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -715,9 +768,36 @@ public final class HaishinKitPlugin: NSObject,FlutterPlugin {
         return
       }
       Task{
-        let res = await setVideoSettings(bitrate: arguments["bitrate"] as? NSNumber, width: arguments["width"] as? NSNumber, height: arguments["height"] as? NSNumber, frameInterval: arguments["frameInterval"] as? NSNumber, profileLevel: arguments["profileLevel"] as? String)
+        let res = await setVideoSettings(
+          bitrate: arguments["bitrate"] as? NSNumber,
+          width: arguments["width"] as? NSNumber,
+          height: arguments["height"] as? NSNumber,
+          frameInterval: arguments["frameInterval"] as? NSNumber,
+          profileLevel: arguments["profileLevel"] as? String,
+          expectedFrameRate: arguments["expectedFrameRate"] as? NSNumber,
+          bitRateMode: arguments["bitRateMode"] as? String
+        )
         result(res)
       }
+    case "setMultitaskingCameraAccessEnabled":
+      #if os(iOS)
+      guard
+        let arguments = call.arguments as? [String: Any?],
+        let enabled = arguments["enabled"] as? Bool else {
+        result(FlutterError(
+          code: "setMultitaskingCameraAccessEnabledError",
+          message: "enabled missing",
+          details: nil
+        ))
+        return
+      }
+      Task {
+        let res = await setMultitaskingCameraAccessEnabled(enabled: enabled)
+        result(res)
+      }
+      #else
+      result(FlutterMethodNotImplemented)
+      #endif
     case "getHasAudio":
       do{
         guard

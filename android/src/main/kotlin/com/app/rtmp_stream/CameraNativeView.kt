@@ -69,6 +69,7 @@ import com.pedro.encoder.input.video.CameraHelper.Facing.FRONT
 import com.pedro.encoder.utils.gl.AspectRatioMode
 import com.pedro.encoder.utils.gl.TranslateTo
 import com.pedro.library.rtmp.RtmpCamera2
+import com.pedro.library.util.streamclient.RtmpStreamClient
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import com.pedro.library.view.OpenGlView
@@ -97,6 +98,10 @@ class CameraNativeView(
     /** 当前已设置的滤镜实例，removeFilter 必须用同一实例才能生效 */
     private var currentFilter: BaseFilterRender? = null
     private var currentFilterType: Int? = null
+    /** RootEncoder 2.7.0+：下一帧编码使用 BT.709 色彩（在 prepare 前设置） */
+    private var forceBt709Color: Boolean = false
+    /** RootEncoder 2.7.0+：RTMP 周期 ping，用于 RTT（须在与 startStream 前对 RtmpStreamClient 设置） */
+    private var rtmpShouldSendPings: Boolean = false
     init {
 //        glView.isKeepAspectRatio = true
         glView.setAspectRatioMode(AspectRatioMode.Adjust)
@@ -231,6 +236,7 @@ class CameraNativeView(
                 val streamingSize = CameraUtils.computeBestPreviewSize(activity, cameraName, preset)
                 val size = streamingSize["size"] as Size
                 val bitrateRes = streamingSize["bitrate"] as Int
+                rtmpCamera.forceBt709Color(forceBt709Color)
                 if ((enableAudio && rtmpCamera.prepareAudio()) && rtmpCamera.prepareVideo(
                         size.width,
                         size.height,
@@ -265,6 +271,8 @@ class CameraNativeView(
                 val streamingSize = CameraUtils.computeBestPreviewSize(activity, cameraName, preset)
                 val size = streamingSize["size"] as Size
                 val bitrateRes = streamingSize["bitrate"] as Int
+                rtmpCamera.forceBt709Color(forceBt709Color)
+                (rtmpCamera.streamClient as? RtmpStreamClient)?.shouldSendPings(rtmpShouldSendPings)
                 if (rtmpCamera.isRecording || rtmpCamera.prepareAudio() && rtmpCamera.prepareVideo(
                         size.width,
                         size.height,
@@ -515,6 +523,13 @@ class CameraNativeView(
             }
             15 -> {
               val f = EdgeDetectionFilterRender()
+              rtmpCamera.glInterface?.setFilter(f)
+              currentFilter = f
+              currentFilterType = type
+              result.success(null)
+            }
+            43 -> {
+              val f = EdgeDetectionFilterRender(false)
               rtmpCamera.glInterface?.setFilter(f)
               currentFilter = f
               currentFilterType = type
@@ -900,12 +915,38 @@ class CameraNativeView(
         ret["sentVideoFrames"] = rtmpCamera.streamClient.getSentVideoFrames()
         ret["droppedAudioFrames"] = rtmpCamera.streamClient.getDroppedAudioFrames()
         ret["droppedVideoFrames"] = rtmpCamera.streamClient.getDroppedVideoFrames()
+        ret["bytesSend"] = rtmpCamera.streamClient.getBytesSend()
         ret["isAudioMuted"] = rtmpCamera.isAudioMuted
         ret["bitrate"] = rtmpCamera.bitrate
         ret["width"] = rtmpCamera.streamWidth
         ret["height"] = rtmpCamera.streamHeight
         ret["fps"] = fps
+        val rtmpSc = rtmpCamera.streamClient as? RtmpStreamClient
+        ret["rttMicros"] = rtmpSc?.getRtt() ?: 0
         result.success(ret)
+    }
+
+    fun setForceBt709Color(enabled: Boolean?, result: MethodChannel.Result) {
+        if (enabled == null) {
+            result.error("setForceBt709Color", "enabled is required", null)
+            return
+        }
+        forceBt709Color = enabled
+        try {
+            rtmpCamera.forceBt709Color(enabled)
+            result.success(null)
+        } catch (e: Exception) {
+            result.error("setForceBt709Color", e.message, null)
+        }
+    }
+
+    fun setRtmpShouldSendPings(enabled: Boolean?, result: MethodChannel.Result) {
+        if (enabled == null) {
+            result.error("setRtmpShouldSendPings", "enabled is required", null)
+            return
+        }
+        rtmpShouldSendPings = enabled
+        result.success(null)
     }
 
     override fun getView(): View {

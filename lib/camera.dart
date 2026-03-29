@@ -122,6 +122,7 @@ class CameraDescription {
 
 /// Statistics about the streaming, bitrate, errors, drops etc.
 ///
+/// [rttMicros] 与 [bytesSend] 依赖 RootEncoder 2.7.0+ RTMP 客户端（需开启 [setRtmpShouldSendPings] 后 RTT 才有效）。
 class StreamStatistics {
   final int? cacheSize;
   final int? sentAudioFrames;
@@ -132,6 +133,10 @@ class StreamStatistics {
   final int? bitrate;
   final int? width;
   final int? height;
+  final int? fps;
+  /// RTMP 往返时延（微秒），需 `setRtmpShouldSendPings(true)` 且推流建立后由服务端响应 ping。
+  final int? rttMicros;
+  final int? bytesSend;
 
   StreamStatistics({
     required this.cacheSize,
@@ -143,11 +148,14 @@ class StreamStatistics {
     required this.width,
     required this.height,
     required this.isAudioMuted,
+    this.fps,
+    this.rttMicros,
+    this.bytesSend,
   });
 
   @override
   String toString() {
-    return 'StreamStatistics{cacheSize: $cacheSize, sentAudioFrames: $sentAudioFrames, sentVideoFrames: $sentVideoFrames, droppedAudioFrames: $droppedAudioFrames, droppedVideoFrames: $droppedVideoFrames, isAudioMuted: $isAudioMuted, bitrate: $bitrate, width: $width, height: $height}';
+    return 'StreamStatistics{cacheSize: $cacheSize, sentAudioFrames: $sentAudioFrames, sentVideoFrames: $sentVideoFrames, droppedAudioFrames: $droppedAudioFrames, droppedVideoFrames: $droppedVideoFrames, isAudioMuted: $isAudioMuted, bitrate: $bitrate, width: $width, height: $height, fps: $fps, rttMicros: $rttMicros, bytesSend: $bytesSend}';
   }
 }
 
@@ -469,6 +477,8 @@ class CameraController extends ValueNotifier<CameraValue> {
 
   /// The set filter
   ///
+  /// Android 滤镜类型包含：`15` 边缘检测（性能模式）、`43` 边缘检测 Sobel 高质量（RootEncoder 2.7.0+）等，详见原生 [CameraNativeView]。
+  ///
   /// Throws a [CameraException] if the capture fails.
   Future<void> setFilter(int type, {String? filePath}) async {
     if (!value.isInitialized! || _isDisposed) {
@@ -487,6 +497,58 @@ class CameraController extends ValueNotifier<CameraValue> {
       await _channel.invokeMethod<void>(
         'setFilter',
         <String, dynamic>{'type': type, 'filePath': filePath},
+      );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// 使用 BT.709 色彩矩阵编码视频（RootEncoder 2.7.0+，仅 Android）。
+  ///
+  /// 在 [startVideoStreaming] / 开始录制 之前调用；可与服务端色彩处理对齐。
+  Future<void> setForceBt709Color(bool enabled) async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController.',
+        'setForceBt709Color was called on uninitialized CameraController',
+      );
+    }
+    if (!Platform.isAndroid) {
+      throw CameraException(
+        'Unsupported platforms.',
+        'setForceBt709Color is only supported on Android.',
+      );
+    }
+    try {
+      await _channel.invokeMethod<void>(
+        'setForceBt709Color',
+        <String, dynamic>{'enabled': enabled},
+      );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// 启用 RTMP 周期 ping，用于测量往返时延（RootEncoder 2.7.0+，仅 Android）。
+  ///
+  /// 须在 [startVideoStreaming] 之前调用；[getStreamStatistics] 中的 [StreamStatistics.rttMicros] 依赖此项。
+  Future<void> setRtmpShouldSendPings(bool enabled) async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController.',
+        'setRtmpShouldSendPings was called on uninitialized CameraController',
+      );
+    }
+    if (!Platform.isAndroid) {
+      throw CameraException(
+        'Unsupported platforms.',
+        'setRtmpShouldSendPings is only supported on Android.',
+      );
+    }
+    try {
+      await _channel.invokeMethod<void>(
+        'setRtmpShouldSendPings',
+        <String, dynamic>{'enabled': enabled},
       );
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
@@ -540,15 +602,18 @@ class CameraController extends ValueNotifier<CameraValue> {
       var data = (await _channel
           .invokeMapMethod<String, dynamic>('getStreamStatistics'))!;
       return StreamStatistics(
-        sentAudioFrames: data["sentAudioFrames"],
-        sentVideoFrames: data["sentVideoFrames"],
-        height: data["height"],
-        width: data["width"],
-        bitrate: data["bitrate"],
-        isAudioMuted: data["isAudioMuted"],
-        cacheSize: data["cacheSize"],
-        droppedAudioFrames: data["drpppedAudioFrames"],
-        droppedVideoFrames: data["droppedVideoFrames"],
+        sentAudioFrames: data["sentAudioFrames"] as int?,
+        sentVideoFrames: data["sentVideoFrames"] as int?,
+        height: data["height"] as int?,
+        width: data["width"] as int?,
+        bitrate: data["bitrate"] as int?,
+        isAudioMuted: data["isAudioMuted"] as bool?,
+        cacheSize: data["cacheSize"] as int?,
+        droppedAudioFrames: data["droppedAudioFrames"] as int?,
+        droppedVideoFrames: data["droppedVideoFrames"] as int?,
+        fps: data["fps"] as int?,
+        rttMicros: data["rttMicros"] as int?,
+        bytesSend: (data["bytesSend"] as num?)?.toInt(),
       );
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
@@ -1010,13 +1075,19 @@ class CameraController extends ValueNotifier<CameraValue> {
   }
 
   /// set video Settings
+  ///
+  /// [expectedFrameRate]：HaishinKit 2.2.2+，写入编码期望帧率并进入 RTMP onMetaData 的 `framerate`。
+  ///
+  /// [bitRateMode]：`average`（默认）、`constant`（iOS 16+）、`variable`（iOS 26+，对应 VideoToolbox VBR）。
   /// Only supports ios
   Future<void> setVideoSettings(
       {int? bitrate,
       int? width,
       int? height,
       int? frameInterval,
-      String? profileLevel}) async {
+      String? profileLevel,
+      double? expectedFrameRate,
+      String? bitRateMode}) async {
     if (!value.isInitialized! || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController',
@@ -1037,8 +1108,36 @@ class CameraController extends ValueNotifier<CameraValue> {
           "width": width,
           "height": height,
           "frameInterval": frameInterval,
-          "profileLevel": profileLevel
+          "profileLevel": profileLevel,
+          if (expectedFrameRate != null) "expectedFrameRate": expectedFrameRate,
+          if (bitRateMode != null) "bitRateMode": bitRateMode,
         },
+      );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// 多任务/分屏时保持相机采集（HaishinKit 2.2.5+，底层 `AVCaptureSession.isMultitaskingCameraAccessEnabled`）。
+  ///
+  /// 需要 iOS 17+ 且设备支持；宜在 [initialize] 之后、[startVideoStreaming] 之前调用。
+  Future<void> setMultitaskingCameraAccessEnabled(bool enabled) async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'setMultitaskingCameraAccessEnabled was called on uninitialized CameraController',
+      );
+    }
+    if (!Platform.isIOS) {
+      throw CameraException(
+        'Unsupported platforms.',
+        'setMultitaskingCameraAccessEnabled is only supported on iOS.',
+      );
+    }
+    try {
+      await _channel.invokeMethod<void>(
+        'setMultitaskingCameraAccessEnabled',
+        <String, dynamic>{'enabled': enabled},
       );
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);

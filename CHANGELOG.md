@@ -45,3 +45,8 @@
 ## 1.0.4
 1. update HaishinKit.swift to 2.2.5 fix xcode 26.4 build error
 2. update com.github.pedroSG94.RootEncoder to 2.7.1
+
+3. **Documentation**: Added usage notes in README / README_zhCN for the following `CameraController` methods:
+   - **Android (RootEncoder 2.7.0+)**: `setForceBt709Color`, `setRtmpShouldSendPings` — BT.709 color matrix for encoding; RTMP periodic ping for RTT (see `getStreamStatistics` / `rttMicros` when pings are enabled).
+   - **iOS (HaishinKit 2.2.1+ / 2.2.2+ / 2.2.5+)**: `setVideoSettings` — optional `expectedFrameRate` (onMetaData `framerate`) and `bitRateMode` (`average` / `constant` / `variable`); `setMultitaskingCameraAccessEnabled` — multitasking / PiP camera access (iOS 17+ when supported).
+4. **CHANGELOG**: This entry records the above API documentation and usage guidance; behavior matches implementations added in plugin development for RootEncoder 2.7.x and HaishinKit 2.2.x.

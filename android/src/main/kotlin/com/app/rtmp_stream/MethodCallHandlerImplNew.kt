@@ -147,6 +147,16 @@ class MethodCallHandlerImplNew(
                     handleException(e, result)
                 }
             }
+            "setForceBt709Color" -> {
+                Log.i("Stuff", "setForceBt709Color")
+                getCameraView()?.setForceBt709Color(call.argument("enabled"), result)
+                    ?: result.error("no_camera", "Camera not initialized", null)
+            }
+            "setRtmpShouldSendPings" -> {
+                Log.i("Stuff", "setRtmpShouldSendPings")
+                getCameraView()?.setRtmpShouldSendPings(call.argument("enabled"), result)
+                    ?: result.error("no_camera", "Camera not initialized", null)
+            }
             "switchCamera" -> {
                 Log.i("Stuff", "switchCamera")
                 getCameraView()?.switchCamera(call.argument("cameraName"),result)
